@@ -26,6 +26,7 @@ private:
 
 	int hex_char_to_int(char digit);
 	void raw_array_to_blocks(std::array<unsigned int, 32> &raw_array);
+	void blocks_to_raw_array(std::array<unsigned int, 32> &raw_array);
 };
 
 

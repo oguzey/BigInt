@@ -1,5 +1,6 @@
-#include "BigInt.h"
+#include "../include/BigInt.h"
 #include <cassert>
+#include "../CommonLib/logger.h"
 
 /* macros for whole BigInt */
 #define BIGINT_BITS				1024
@@ -38,7 +39,7 @@ BigInt::BigInt()
 BigInt::BigInt(const char *str_hex_number) : BigInt()
 {
 	if (from_string(str_hex_number)) {
-		std::cout << "Can not convert from string. Check your string." << std::endl;
+		WARN("Can not convert from string. Check your string.");
 	}
 }
 
@@ -72,12 +73,12 @@ int BigInt::from_string(const char *hex_str)
 	std::array<block, BIGINT_BYTES> raw_array = {0};
 
 	if (strlen(hex_str) > BIGINT_SIZE_IN_HEX) {
-		std::cout << "String too long!" << std::endl;
+		WARN("String too long!");
 	}
 
 	for (i = (int)strlen(hex_str) - 1; i >= 0; --i) {
 		if (hex_char_to_int(hex_str[i]) == -1) {
-			std::cout << "Provided bad nuber (" << hex_str <<")!" << std::endl;
+			WARN("Provided bad nuber ({})", hex_str);
 			return -1;
 		}
 	}
@@ -92,10 +93,9 @@ int BigInt::from_string(const char *hex_str)
 			shift_pos = 0;
 		}
 	}
-
-	std::cout << "Raw array" << std::endl;
+	DEBUG("Raw array");
 	for(i = 0; i < raw_array.size(); ++i) {
-		std::cout << std::dec << i << ")\t" << std::hex << raw_array[i] << std::endl;
+		DEBUG("{})\t{:x}", i, raw_array[i]);
 	}
 	raw_array_to_blocks(raw_array);
 
@@ -109,11 +109,23 @@ int BigInt::from_string(const std::string &hex_string)
 
 std::string* BigInt::to_string()
 {
-	std::cout << "BigInt number: " << std::endl;
-	for(int i = 0; i < size; ++i) {
-		std::cout << std::dec << i << ")\t" << std::hex << blocks[i] << std::endl;
+	int i = 0;
+	std::array<block, BIGINT_BYTES> raw_array = {0};
+
+	INFO("BigInt number (blocks): ");
+	for(; i < size; ++i) {
+		INFO("{}\t{:X}", i, blocks[i]);
 	}
-	std::cout << "End BigInt" << std::endl;
+	INFO("End BigInt (blocks)");
+
+	blocks_to_raw_array(raw_array);
+
+	INFO("BigInt number (normal array): ");
+	for(i = 0; i < raw_array.size(); ++i) {
+		INFO("{}\t{:X}", i, raw_array[i]);
+	}
+	INFO("End of BigInt ( normal array)");
+
 	return new std::string("Test string");
 }
 
@@ -122,10 +134,10 @@ std::string* BigInt::to_string()
  *****************************************************************************/
 
 /**
- * @brief 	Convert char in hex format to number.
- * @param digit		- INPUT. Char to convert.
- * @return 		integer in range [0 - 15] when successful and
- * 			-1 if error occurred.
+ * @brief hex_char_to_int	Convert char in hex format to number.
+ * @param digit			- INPUT. Char to convert.
+ * @return 			integer in range [0 - 15] when successful and
+ * 				-1 if error occurred.
  */
 int BigInt::hex_char_to_int(char digit)
 {
@@ -140,7 +152,8 @@ int BigInt::hex_char_to_int(char digit)
 }
 
 /**
- *
+ * @brief raw_array_to_blocks	Convert array with numbers to array in block`s representaion.
+ * @param raw_array		[input] Array with numbers.
  */
 void BigInt::raw_array_to_blocks(std::array<block, BIGINT_BYTES> &raw_array)
 {
@@ -150,7 +163,7 @@ void BigInt::raw_array_to_blocks(std::array<block, BIGINT_BYTES> &raw_array)
 	unsigned int index_raw = 0;
 	unsigned int index_blocks = 0;
 
-	for(index_raw = 0; index_raw < BIGINT_BYTES; ++index_raw, ++index_blocks) {
+	for(; index_raw < BIGINT_BYTES; ++index_raw, ++index_blocks) {
 		temp = 0;
 		if (left_bits) {
 			temp = raw_array[index_raw - 1] >> (WORD_BITS - left_bits);
@@ -158,13 +171,13 @@ void BigInt::raw_array_to_blocks(std::array<block, BIGINT_BYTES> &raw_array)
 				blocks[index_blocks] = temp;
 				--index_raw;
 				left_bits = 0;
-				std::cout << "30 bits| temp = "<< std::hex << temp << std::dec << std::endl;
+				DEBUG("30 bits| temp = {:X}", temp);
 				continue;
 			}
 		}
-		blocks[index_blocks] = (raw_array[index_raw] << left_bits + BLOCK_CARRY_BITS) >> BLOCK_CARRY_BITS;
-		std::cout << index_blocks << "T: " << std::hex << blocks[index_blocks] << " and " << temp << std::endl <<
-				std::dec;
+		blocks[index_blocks] = (raw_array[index_raw] <<
+				left_bits + BLOCK_CARRY_BITS) >> BLOCK_CARRY_BITS;
+		DEBUG("T: {:X} and {:X}", blocks[index_blocks], temp);
 		blocks[index_blocks] += temp;
 		left_bits += BLOCK_CARRY_BITS;
 	}
@@ -174,3 +187,29 @@ void BigInt::raw_array_to_blocks(std::array<block, BIGINT_BYTES> &raw_array)
 
 	blocks[index_blocks] = raw_array[index_raw - 1] >> (WORD_BITS - left_bits);
 }
+
+/**
+ * @brief blocks_to_raw_array	Convert numbers in block representation to
+ * 				human readable format.
+ * @param raw_array		[output] Array for numbers.
+ */
+void BigInt::blocks_to_raw_array(std::array<block, BIGINT_BYTES> &raw_array)
+{
+	unsigned int acquired_bits = 0;
+	int index_blocks = 0,
+		index_raw = 0;
+	block temp = 0;
+
+	for(; index_raw < BIGINT_BYTES; ++index_blocks, ++index_raw) {
+		if(acquired_bits == BLOCK_BITS) {
+			++index_blocks;
+			acquired_bits = 0;
+		}
+		raw_array[index_raw] = blocks[index_blocks] >> acquired_bits;
+		temp = blocks[index_blocks + 1] <<
+			(WORD_BITS - acquired_bits + BLOCK_CARRY_BITS);
+		raw_array[index_raw] += temp;
+		acquired_bits += 2;
+	}
+}
+

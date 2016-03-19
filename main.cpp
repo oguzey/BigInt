@@ -1,14 +1,15 @@
 #include <iostream>
-#include "src/BigInt.h"
+#include "include/BigInt.h"
 
-using namespace std;
+#define ALLOCATE_LOGGER
+#include "CommonLib/logger.h"
+
 
 int main() {
-	cout << "Hello, World!" << endl;
 	BigInt number("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 						  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 						  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-	cout << number.to_string()->c_str() << endl;
-	cout << "All ok" << endl;
+	LOG(number.to_string()->c_str());
+	LOG("All ok.");
 	return 0;
 }
