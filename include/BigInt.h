@@ -12,21 +12,21 @@ class BigInt {
 public:
 	BigInt();
 //	BigInt(unsigned int number);
-	BigInt(const char *str_hex_number);
+	BigInt(const char *strHexNumber);
 	~BigInt();
 	BigInt* add(BigInt &a, BigInt &b);
-	int from_string(const char *hex_string);
-	int from_string(const std::string &hex_string);
-	std::string* to_string();
+	int fromString(const char *hexString);
+	int fromString(const std::string &hexString);
+	std::string* toString();
 
 private:
-	unsigned int *blocks;
-	unsigned int length;
-	unsigned int size;
+	unsigned int *blocks_;
+	unsigned int length_;
+	unsigned int size_;
 
-	int hex_char_to_int(char digit);
-	void raw_array_to_blocks(std::array<unsigned int, 32> &raw_array);
-	void blocks_to_raw_array(std::array<unsigned int, 32> &raw_array);
+	int hexCharToInteger(char digit);
+	void rawArrayToBlocks(std::array<unsigned int, 32> &rawArray);
+	void blocksToRawArray(std::array<unsigned int, 32> &rawArray);
 };
 
 
