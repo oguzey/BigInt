@@ -14,7 +14,7 @@ public:
 //	BigInt(unsigned int number);
 	BigInt(const char *strHexNumber);
 	~BigInt();
-	BigInt* add(BigInt &a, BigInt &b);
+	void add(BigInt &number);
 	int fromString(const char *hexString);
 	int fromString(const std::string &hexString);
 	std::string* toString();
@@ -27,6 +27,7 @@ private:
 	int hexCharToInteger(char digit);
 	void rawArrayToBlocks(std::array<unsigned int, 32> &rawArray);
 	void blocksToRawArray(std::array<unsigned int, 32> &rawArray);
+	char integerToHexChar(int symbol);
 };
 
 

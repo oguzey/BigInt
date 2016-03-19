@@ -1,6 +1,7 @@
 #include "../include/BigInt.h"
 #include <cassert>
 #include "../logger/logger.h"
+#include <algorithm>
 
 /* macros for whole BigInt */
 #define BIGINT_BITS				1024
@@ -45,26 +46,25 @@ BigInt::BigInt(const char *strHexNumber) : BigInt()
 
 BigInt::~BigInt() { delete[] blocks_; }
 
-BigInt* BigInt::add(BigInt &a, BigInt &b)
+void BigInt::add(BigInt &number)
 {
-	BigInt *summ = new BigInt();
 	block carry = 0;
 	int i = 0;
 
 	for(i = 0 ; i < size_ - 1; ++i) {
-		summ->blocks_[i] = a.blocks_[i] + b.blocks_[i] + carry;
-		carry = summ->blocks_[i] >> BLOCK_BITS;
-		summ->blocks_[i] &= BLOCK_MAX_NUMBER;
-		assert(carry & 1 == carry);
+		DEBUG("one {:x} + {:x}", blocks_[i], number.blocks_[i]);
+		blocks_[i] = blocks_[i] + number.blocks_[i] + carry;
+		carry = blocks_[i] >> BLOCK_BITS;
+		blocks_[i] &= BLOCK_MAX_NUMBER;
+		DEBUG("carry = {:x}", carry);
+		assert((carry & 1) == carry);
 	}
 
 	assert(BLOCKS_COUNT - 1 == i);
 
-	summ->blocks_[i] = a.blocks_[i] + b.blocks_[i] + carry;
-	carry = summ->blocks_[i] >> LAST_BLOCK_BITS;
-	summ->blocks_[i] &= LAST_BLOCK_MAX_NUMBER;
-
-	return summ;
+	blocks_[i] = blocks_[i] + number.blocks_[i] + carry;
+	carry = blocks_[i] >> LAST_BLOCK_BITS;
+	blocks_[i] &= LAST_BLOCK_MAX_NUMBER;
 }
 
 int BigInt::fromString(const char *hexStr)
@@ -109,6 +109,7 @@ int BigInt::fromString(const std::string &hexString)
 
 std::string* BigInt::toString()
 {
+	std::string *output = new std::string("");
 	int i = 0;
 	std::array<block, BIGINT_BYTES> rawArray = {0};
 
@@ -123,10 +124,15 @@ std::string* BigInt::toString()
 	INFO("BigInt number (normal array): ");
 	for(i = 0; i < rawArray.size(); ++i) {
 		INFO("{}\t{:X}", i, rawArray[i]);
+		for (int j = 0; j < 8; ++j) {
+			char ch = rawArray[i] >> (j * 4) & 0xF;
+			output->push_back(integerToHexChar(ch));
+			DEBUG("parse {} as {}", (int)ch, integerToHexChar(ch));
+		}
 	}
 	INFO("End of BigInt ( normal array)");
-
-	return new std::string("Test string");
+	std::reverse(output->begin(), output->end());
+	return output;
 }
 
 /******************************************************************************
@@ -151,6 +157,16 @@ int BigInt::hexCharToInteger(char digit)
 	return -1;
 }
 
+char BigInt::integerToHexChar(int symbol)
+{
+	assert(symbol >= 0x0 && symbol <= 0xF);
+	char out = -1;
+	if (symbol >= 0 && symbol <= 9) {
+		return '0' + symbol;
+	} else {
+		return 'A' + symbol - 10;
+	}
+}
 /**
  * @brief rawArray_to_blocks	Convert array with numbers to array in block`s representaion.
  * @param rawArray		[input] Array with numbers.
@@ -207,7 +223,9 @@ void BigInt::blocksToRawArray(std::array<block, BIGINT_BYTES> &rawArray)
 		}
 		rawArray[indexRaw] = blocks_[indexBlocks] >> acquiredBits;
 		temp = blocks_[indexBlocks + 1] <<
-			(WORD_BITS - acquiredBits + BLOCK_CARRY_BITS);
+			(WORD_BITS - acquiredBits - BLOCK_CARRY_BITS);
+		DEBUG("BtA: {:X} + \t {:X}   {}", rawArray[indexRaw], temp,
+				(WORD_BITS - acquiredBits));
 		rawArray[indexRaw] += temp;
 		acquiredBits += 2;
 	}
