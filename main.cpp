@@ -16,6 +16,13 @@ int main() {
 
 	LOG("result: {}", number1.toString()->c_str());
 
+	number1.shiftLeft(20);
+
+	LOG("result of shift left: {}", number1.toString()->c_str());
+	number1.shiftRight(4);
+	LOG("result of shift right1: {}", number1.toString()->c_str());
+	number1.shiftRight(16);
+	LOG("result of shift right1: {}", number1.toString()->c_str());
 	LOG("All ok.");
 	return 0;
 }
