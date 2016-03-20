@@ -1,14 +1,20 @@
-#include "../include/BigInt.h"
 #include <cassert>
-#include "../logger/logger.h"
 #include <algorithm>
+#include <math.h>
+#include "../logger/logger.h"
+#include "../include/BigInt.h"
+
 
 /* macros for whole BigInt */
 #define BIGINT_BITS			1024
 #define BIGINT_BYTES			32
 #define BIGINT_SIZE_IN_HEX		256
 
+#define BIGINT_DOUBLE_BITS		2048
+
+
 #define WORD_BITS			32
+#define BYTE_BITS			8
 /*
  * for 1024 bit number need 35 blocks
  * 34 blocks with 30 bits digit
@@ -16,6 +22,7 @@
  */
 
 #define BLOCKS_COUNT			35
+#define BLOCKS_DOUBLE_COUNT		69
 #define BLOCK_CARRY_BITS		2
 
 /* macros for usual block of BigInt */
@@ -23,18 +30,25 @@
 #define BLOCK_MAX_NUMBER		0x3FFFFFFF
 #define BLOCK_SIZE_IN_HEX		4
 
-/* macros for last block of BigInt */
-#define LAST_BLOCK_BITS			4
-#define LAST_BLOCK_MAX_NUMBER	0xF
 
-typedef  unsigned int block;
-
-BigInt::BigInt()
+BigInt::BigInt(unsigned int lengthBits):
+	length_(lengthBits),
+	size_(ceil(lengthBits / (float)BLOCK_BITS)),
+	countBistLastBlock_(lengthBits % BLOCK_BITS),
+	maxValueLastBlock_(fillBits(countBistLastBlock_))
 {
-	size_ = BLOCKS_COUNT;
+	assert(lengthBits == BIGINT_BITS || lengthBits == BIGINT_DOUBLE_BITS);
+
+	INFO("Create BigInt with length {}, size {}, countBistLastBlock {},"
+			"maxValueLastBlock_ {:X}",
+			length_, size_, countBistLastBlock_, maxValueLastBlock_);
+
 	blocks_ = new block[size_];
 	memset(blocks_, 0, sizeof(block) * size_);
-	length_ = 0;
+}
+
+BigInt::BigInt() : BigInt(BIGINT_BITS)
+{
 }
 
 BigInt::BigInt(const char *strHexNumber) : BigInt()
@@ -63,8 +77,8 @@ void BigInt::add(BigInt &number)
 	assert(BLOCKS_COUNT - 1 == i);
 
 	blocks_[i] = blocks_[i] + number.blocks_[i] + carry;
-	carry = blocks_[i] >> LAST_BLOCK_BITS;
-	blocks_[i] &= LAST_BLOCK_MAX_NUMBER;
+	carry = blocks_[i] >> countBistLastBlock_;
+	blocks_[i] &= maxValueLastBlock_;
 }
 
 int BigInt::fromString(const char *hexStr)
@@ -198,7 +212,7 @@ void BigInt::rawArrayToBlocks(std::array<block, BIGINT_BYTES> &rawArray)
 		leftBits += BLOCK_CARRY_BITS;
 	}
 
-	assert(leftBits == LAST_BLOCK_BITS);
+	assert(leftBits == countBistLastBlock_);
 	assert(indexBlocks == BLOCKS_COUNT - 1);
 
 	blocks_[indexBlocks] = rawArray[indexRaw - 1] >> (WORD_BITS - leftBits);
@@ -212,8 +226,9 @@ void BigInt::rawArrayToBlocks(std::array<block, BIGINT_BYTES> &rawArray)
 void BigInt::blocksToRawArray(std::array<block, BIGINT_BYTES> &rawArray)
 {
 	unsigned int acquiredBits = 0;
-	int indexBlocks = 0,
-		indexRaw = 0;
+	int indexBlocks = 0;
+	int indexRaw = 0;
+	int sizeRawArray = length_ / BYTE_BITS;
 	block temp = 0;
 
 	for(; indexRaw < BIGINT_BYTES; ++indexBlocks, ++indexRaw) {
@@ -231,6 +246,15 @@ void BigInt::blocksToRawArray(std::array<block, BIGINT_BYTES> &rawArray)
 	}
 }
 
+block BigInt::fillBits(unsigned int amountBits)
+{
+	block number = 0;
+
+	for (unsigned int i = 0; i < amountBits; ++i) {
+		number += (1 << i);
+	}
+	return number;
+}
 
 void BigInt::shiftLeft(int countBits)
 {
@@ -250,20 +274,20 @@ void BigInt::shiftLeft(int countBits)
 	}
 	// last block
 	blocks_[i] = (blocks_[i] << countBits) + carryBits;
-	blocks_[i] &= LAST_BLOCK_MAX_NUMBER;
+	blocks_[i] &= maxValueLastBlock_;
 }
 
 void BigInt::shiftRight(int countBits)
 {
 	assert(countBits >= 0 && countBits <= BLOCK_BITS);
 	int i = 0;
-	block maxCarryBlock = 0;
+	block maxCarryBlock = fillBits(countBits);
 	block carryBits = 0;
 	block temp = 0;
 
-	for (i = 0; i < countBits; ++i) {
-		maxCarryBlock += (1 << i);
-	}
+	//for (i = 0; i < countBits; ++i) {
+	//	maxCarryBlock += (1 << i);
+	//}
 	DEBUG("maxCarryBlock = {:X}", maxCarryBlock);
 
 	blocks_[0] >>= countBits;

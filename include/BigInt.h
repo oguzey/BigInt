@@ -8,10 +8,12 @@
 static_assert(sizeof(unsigned int) == 4, "Support only 32-bit of integer");
 
 
+typedef  unsigned int block;
+
+
 class BigInt {
 public:
 	BigInt();
-//	BigInt(unsigned int number);
 	BigInt(const char *strHexNumber);
 	~BigInt();
 	void add(BigInt &number);
@@ -22,14 +24,18 @@ public:
 	void shiftRight(int countBits);
 
 private:
-	unsigned int *blocks_;
-	unsigned int length_;
-	unsigned int size_;
+	block *blocks_;
+	const unsigned int length_;
+	const unsigned int size_;
+	const unsigned int countBistLastBlock_;
+	const block maxValueLastBlock_;
 
+	BigInt(unsigned int lengthBits);
 	int hexCharToInteger(char digit);
 	void rawArrayToBlocks(std::array<unsigned int, 32> &rawArray);
 	void blocksToRawArray(std::array<unsigned int, 32> &rawArray);
 	char integerToHexChar(int symbol);
+	block fillBits(unsigned int amountBits);
 };
 
 
