@@ -4,6 +4,7 @@
 #include <string>
 #include <string.h>
 #include <array>
+#include <vector>
 
 static_assert(sizeof(unsigned int) == 4, "Support only 32-bit of integer");
 
@@ -32,8 +33,8 @@ private:
 
 	BigInt(unsigned int lengthBits);
 	int hexCharToInteger(char digit);
-	void rawArrayToBlocks(std::array<unsigned int, 32> &rawArray);
-	void blocksToRawArray(std::array<unsigned int, 32> &rawArray);
+	void rawArrayToBlocks(std::vector<block> &rawArray);
+	void blocksToRawArray(std::vector<block> &rawArray);
 	char integerToHexChar(int symbol);
 	block fillBits(unsigned int amountBits);
 };

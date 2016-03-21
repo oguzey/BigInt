@@ -63,7 +63,7 @@ BigInt::~BigInt() { delete[] blocks_; }
 void BigInt::add(BigInt &number)
 {
 	block carry = 0;
-	int i = 0;
+	unsigned int i = 0;
 
 	for(i = 0 ; i < size_ - 1; ++i) {
 		//DEBUG("one {:x} + {:x}", blocks_[i], number.blocks_[i]);
@@ -84,9 +84,11 @@ void BigInt::add(BigInt &number)
 int BigInt::fromString(const char *hexStr)
 {
 	int i = 0;
-	std::array<block, BIGINT_BYTES> rawArray = {0};
+	size_t maxAmountChars = length_ / BYTE_BITS;
+	std::vector<block> rawArray(length_ / WORD_BITS);
+	std::fill(rawArray.begin(), rawArray.end(), 0);
 
-	if (strlen(hexStr) > BIGINT_SIZE_IN_HEX) {
+	if (strlen(hexStr) > maxAmountChars) {
 		WARN("String too long!");
 	}
 
@@ -96,9 +98,10 @@ int BigInt::fromString(const char *hexStr)
 			return -1;
 		}
 	}
-	int indexArray = 0;
-	int shiftPos = 0;
-	for (i = (int)strlen(hexStr) - 1; i >= 0 && indexArray < size_; --i) {
+	unsigned int indexArray = 0;
+	unsigned int shiftPos = 0;
+	i = (int)strlen(hexStr) - 1;
+	for (; i >= 0 && indexArray < rawArray.size(); --i) {
 		int digit = hexCharToInteger(hexStr[i]);
 		rawArray[indexArray] += digit << 4 * shiftPos;
 		++shiftPos;
@@ -124,8 +127,9 @@ int BigInt::fromString(const std::string &hexString)
 std::string* BigInt::toString()
 {
 	std::string *output = new std::string("");
-	int i = 0;
-	std::array<block, BIGINT_BYTES> rawArray = {0};
+	unsigned int i = 0;
+	std::vector<block> rawArray(length_ / WORD_BITS);
+	std::fill(rawArray.begin(), rawArray.end(), 0);
 
 	//INFO("BigInt number (blocks): ");
 	//for(; i < size_; ++i) {
@@ -135,7 +139,7 @@ std::string* BigInt::toString()
 
 	blocksToRawArray(rawArray);
 
-	//INFO("BigInt number (normal array): ");
+	INFO("BigInt number (normal array): size is {}", rawArray.size());
 	for(i = 0; i < rawArray.size(); ++i) {
 		//INFO("{}\t{:X}", i, rawArray[i]);
 		for (int j = 0; j < 8; ++j) {
@@ -174,7 +178,6 @@ int BigInt::hexCharToInteger(char digit)
 char BigInt::integerToHexChar(int symbol)
 {
 	assert(symbol >= 0x0 && symbol <= 0xF);
-	char out = -1;
 	if (symbol >= 0 && symbol <= 9) {
 		return '0' + symbol;
 	} else {
@@ -185,7 +188,7 @@ char BigInt::integerToHexChar(int symbol)
  * @brief rawArray_to_blocks	Convert array with numbers to array in block`s representaion.
  * @param rawArray		[input] Array with numbers.
  */
-void BigInt::rawArrayToBlocks(std::array<block, BIGINT_BYTES> &rawArray)
+void BigInt::rawArrayToBlocks(std::vector<block> &rawArray)
 {
 	int leftBits = 0;
 	block temp = 0;
@@ -206,7 +209,8 @@ void BigInt::rawArrayToBlocks(std::array<block, BIGINT_BYTES> &rawArray)
 			}
 		}
 		blocks_[indexBlocks] = (rawArray[indexRaw] <<
-				leftBits + BLOCK_CARRY_BITS) >> BLOCK_CARRY_BITS;
+				(leftBits + BLOCK_CARRY_BITS));
+		blocks_[indexBlocks] >>= BLOCK_CARRY_BITS;
 		//DEBUG("T: {:X} and {:X}", blocks_[indexBlocks], temp);
 		blocks_[indexBlocks] += temp;
 		leftBits += BLOCK_CARRY_BITS;
@@ -223,15 +227,15 @@ void BigInt::rawArrayToBlocks(std::array<block, BIGINT_BYTES> &rawArray)
  * 				human readable format.
  * @param rawArray		[output] Array for numbers.
  */
-void BigInt::blocksToRawArray(std::array<block, BIGINT_BYTES> &rawArray)
+void BigInt::blocksToRawArray(std::vector<block> &rawArray)
 {
 	unsigned int acquiredBits = 0;
 	int indexBlocks = 0;
 	int indexRaw = 0;
-	int sizeRawArray = length_ / BYTE_BITS;
+	int sizeRawArray = rawArray.size();
 	block temp = 0;
 
-	for(; indexRaw < BIGINT_BYTES; ++indexBlocks, ++indexRaw) {
+	for(; indexRaw < sizeRawArray; ++indexBlocks, ++indexRaw) {
 		if(acquiredBits == BLOCK_BITS) {
 			++indexBlocks;
 			acquiredBits = 0;
@@ -262,7 +266,7 @@ void BigInt::shiftLeft(int countBits)
 
 	block carryBits = 0;
 	block temp = 0;
-	int i = 0;
+	unsigned int i = 0;
 
 	for (i = 0; i < size_ - 1; ++i) {
 		// acquire carry bits from current block
@@ -280,10 +284,9 @@ void BigInt::shiftLeft(int countBits)
 void BigInt::shiftRight(int countBits)
 {
 	assert(countBits >= 0 && countBits <= BLOCK_BITS);
-	int i = 0;
+	unsigned int i = 0;
 	block maxCarryBlock = fillBits(countBits);
 	block carryBits = 0;
-	block temp = 0;
 
 	//for (i = 0; i < countBits; ++i) {
 	//	maxCarryBlock += (1 << i);
