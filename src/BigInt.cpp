@@ -300,3 +300,22 @@ void BigInt::shiftRight(int countBits)
 		blocks_[i] >>= countBits;
 	}
 }
+
+
+BigInt* BigInt::mul(const BigInt &number, BigInt *result)
+{
+	uint64_t temp_res = 0;
+	block c = 0;
+	BigInt *res = result ? result : new BigInt(BIGINT_DOUBLE_BITS);
+
+	for(unsigned int i = 0; i < size_; ++i) {
+		c = 0;
+		for (unsigned int j = 0; j < number.size_; ++j) {
+			temp_res = res->blocks_[i + j] + blocks_[i] * number.blocks_[j] + c;
+			res->blocks_[i + j] = temp_res & BLOCK_MAX_NUMBER;
+			c = (temp_res >> BLOCK_BITS) & BLOCK_MAX_NUMBER;
+		}
+		res->blocks_[i + number.size_] = c;
+	}
+	return res;
+}

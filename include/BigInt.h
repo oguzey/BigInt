@@ -23,6 +23,7 @@ public:
 	std::string* toString();
 	void shiftLeft(int countBits);
 	void shiftRight(int countBits);
+	BigInt* mul(const BigInt &number, BigInt *result);
 
 private:
 	block *blocks_;
