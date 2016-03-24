@@ -43,6 +43,7 @@ private:
 	void blocksToRawArray(std::vector<block> &rawArray);
 	char integerToHexChar(int symbol);
 	block fillBits(unsigned int amountBits);
+	int getPosMostSignificatnBit();
 };
 
 

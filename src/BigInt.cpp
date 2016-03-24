@@ -170,6 +170,10 @@ std::string* BigInt::toString()
 	return output;
 }
 
+/******************************************************************************
+ * 			Private functions
+ *****************************************************************************/
+
 /**
  * @brief 			Convert char in hex format to number.
  * @param digit			- INPUT. Char to convert.
@@ -333,6 +337,29 @@ BigInt* BigInt::mul(const BigInt &number, BigInt *result)
 		res->blocks_[i + number.size_] = c;
 	}
 	return res;
+}
+
+int BigInt::getPosMostSignificatnBit()
+{
+	unsigned int position = 0;
+	block temp = 0;
+	int found = 0;
+	temp = 1 << countBistLastBlock_;
+	while (temp && (found = blocks_[size_ - 1] & temp) == 0) {
+		++position;
+		temp >>= 1;
+	}
+	if (found) {
+		return position;
+	}
+	for (int i = size_ - 2; i >= 0; --i) {
+		temp = 1 << BLOCK_BITS;
+		while (temp && (found = blocks_[i] & temp) == 0) {
+			++position;
+			temp >>= 1;
+		}
+	}
+	return position ? position : -1;
 }
 
 int BigInt::isEqual(const BigInt &number)
