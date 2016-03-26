@@ -60,46 +60,6 @@ BigInt::BigInt(const char *strHexNumber) : BigInt()
 
 BigInt::~BigInt() { delete[] blocks_; }
 
-void BigInt::add(BigInt &number)
-{
-	block carry = 0;
-	unsigned int i = 0;
-
-	for(i = 0 ; i < size_ - 1; ++i) {
-		//DEBUG("one {:x} + {:x}", blocks_[i], number.blocks_[i]);
-		blocks_[i] = blocks_[i] + number.blocks_[i] + carry;
-		carry = blocks_[i] >> BLOCK_BITS;
-		blocks_[i] &= BLOCK_MAX_NUMBER;
-		//DEBUG("carry = {:x}", carry);
-		assert((carry & 1) == carry);
-	}
-
-	assert(BLOCKS_COUNT - 1 == i);
-
-	blocks_[i] = blocks_[i] + number.blocks_[i] + carry;
-	carry = blocks_[i] >> countBistLastBlock_;
-	blocks_[i] &= maxValueLastBlock_;
-}
-
-void BigInt::sub(BigInt &number)
-{
-	block setterCarryBit = BLOCK_MAX_NUMBER + 1;
-	block carryBit = 0;
-	unsigned int i = 0;
-
-	assert(setterCarryBit == (1 << (BLOCK_BITS + 1)));
-
-	for (i = 0; i < size_ - 1; ++i) {
-		blocks_[i] = (blocks_[i] | setterCarryBit) - number.blocks_[i] - carryBit;
-		carryBit = blocks_[i] >> BLOCK_BITS;
-		assert((carryBit & 1) == carryBit);
-		carryBit ^= 1;
-	}
-	// last block
-	blocks_[i] = blocks_[i] - number.blocks_[i] - carryBit;
-	blocks_[i] &= maxValueLastBlock_;
-}
-
 int BigInt::fromString(const char *hexStr)
 {
 	int i = 0;
@@ -172,10 +132,6 @@ std::string* BigInt::toString()
 	return output;
 }
 
-/******************************************************************************
- * 			Private functions
- *****************************************************************************/
-
 /**
  * @brief 			Convert char in hex format to number.
  * @param digit			- INPUT. Char to convert.
@@ -203,10 +159,7 @@ char BigInt::integerToHexChar(int symbol)
 		return 'A' + symbol - 10;
 	}
 }
-/**
- * @brief rawArray_to_blocks	Convert array with numbers to array in block`s representaion.
- * @param rawArray		[input] Array with numbers.
- */
+
 void BigInt::rawArrayToBlocks(std::vector<block> &rawArray)
 {
 	int leftBits = 0;
@@ -215,7 +168,7 @@ void BigInt::rawArrayToBlocks(std::vector<block> &rawArray)
 	unsigned int indexRaw = 0;
 	unsigned int indexBlocks = 0;
 
-	for(; indexRaw < BIGINT_BYTES; ++indexRaw, ++indexBlocks) {
+	for(; indexRaw < rawArray.size(); ++indexRaw, ++indexBlocks) {
 		temp = 0;
 		if (leftBits) {
 			temp = rawArray[indexRaw - 1] >> (WORD_BITS - leftBits);
@@ -269,6 +222,52 @@ void BigInt::blocksToRawArray(std::vector<block> &rawArray)
 	}
 }
 
+int BigInt::getPosMostSignificatnBit()
+{
+	unsigned int position = 0;
+	block temp = 0;
+	int found = 0;
+	temp = 1 << countBistLastBlock_;
+	while (temp && (found = blocks_[size_ - 1] & temp) == 0) {
+		++position;
+		temp >>= 1;
+	}
+	if (found) {
+		return position;
+	}
+	for (int i = size_ - 2; i >= 0; --i) {
+		temp = 1 << BLOCK_BITS;
+		while (temp && (found = blocks_[i] & temp) == 0) {
+			++position;
+			temp >>= 1;
+		}
+	}
+	return position ? position : -1;
+}
+
+int BigInt::isEqual(const BigInt &number)
+{
+	assert(size_ == number.size_ == BIGINT_BITS);
+	return std::equal(blocks_, blocks_ + size_, number.blocks_);
+}
+
+void BigInt::setMax()
+{
+	memset(blocks_, BLOCK_MAX_NUMBER, size_ - 1);
+	blocks_[size_ - 1] = maxValueLastBlock_;
+}
+
+void BigInt::setZero()
+{
+	memset(blocks_, 0, size_);
+}
+
+void BigInt::setNumber(unsigned int number)
+{
+	memset(blocks_ + 1, 0, size_ - 1);
+	blocks_[0] = number;
+}
+
 block BigInt::fillBits(unsigned int amountBits)
 {
 	block number = 0;
@@ -320,6 +319,45 @@ void BigInt::shiftRight(int countBits)
 	}
 }
 
+void BigInt::add(BigInt &number)
+{
+	block carry = 0;
+	unsigned int i = 0;
+
+	for(i = 0 ; i < size_ - 1; ++i) {
+		//DEBUG("one {:x} + {:x}", blocks_[i], number.blocks_[i]);
+		blocks_[i] = blocks_[i] + number.blocks_[i] + carry;
+		carry = blocks_[i] >> BLOCK_BITS;
+		blocks_[i] &= BLOCK_MAX_NUMBER;
+		//DEBUG("carry = {:x}", carry);
+		assert((carry & 1) == carry);
+	}
+
+	assert(BLOCKS_COUNT - 1 == i);
+
+	blocks_[i] = blocks_[i] + number.blocks_[i] + carry;
+	carry = blocks_[i] >> countBistLastBlock_;
+	blocks_[i] &= maxValueLastBlock_;
+}
+
+void BigInt::sub(BigInt &number)
+{
+	block setterCarryBit = BLOCK_MAX_NUMBER + 1;
+	block carryBit = 0;
+	unsigned int i = 0;
+
+	assert(setterCarryBit == (1 << (BLOCK_BITS + 1)));
+
+	for (i = 0; i < size_ - 1; ++i) {
+		blocks_[i] = (blocks_[i] | setterCarryBit) - number.blocks_[i] - carryBit;
+		carryBit = blocks_[i] >> BLOCK_BITS;
+		assert((carryBit & 1) == carryBit);
+		carryBit ^= 1;
+	}
+	// last block
+	blocks_[i] = blocks_[i] - number.blocks_[i] - carryBit;
+	blocks_[i] &= maxValueLastBlock_;
+}
 
 BigInt* BigInt::mul(const BigInt &number, BigInt *result)
 {
@@ -340,51 +378,4 @@ BigInt* BigInt::mul(const BigInt &number, BigInt *result)
 	}
 	return res;
 }
-
-int BigInt::getPosMostSignificatnBit()
-{
-	unsigned int position = 0;
-	block temp = 0;
-	int found = 0;
-	temp = 1 << countBistLastBlock_;
-	while (temp && (found = blocks_[size_ - 1] & temp) == 0) {
-		++position;
-		temp >>= 1;
-	}
-	if (found) {
-		return position;
-	}
-	for (int i = size_ - 2; i >= 0; --i) {
-		temp = 1 << BLOCK_BITS;
-		while (temp && (found = blocks_[i] & temp) == 0) {
-			++position;
-			temp >>= 1;
-		}
-	}
-	return position ? position : -1;
-}
-
-int BigInt::isEqual(const BigInt &number)
-{
-	assert(size_ == number.size_ == BIGINT_BITS);
-	return std::equal(blocks_, blocks_ + size_, number.blocks_);
-}
-
-void BigInt::setMax()
-{
-	memset(blocks_, BLOCK_MAX_NUMBER, size_ - 1);
-	blocks_[size_ - 1] = maxValueLastBlock_;
-}
-
-void BigInt::setZero()
-{
-	memset(blocks_, 0, size_);
-}
-
-void BigInt::setNumber(unsigned int number)
-{
-	memset(blocks_ + 1, 0, size_ - 1);
-	blocks_[0] = number;
-}
-
 
