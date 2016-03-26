@@ -5,30 +5,27 @@
 #include "../include/BigInt.h"
 
 
+#define WORD_BITS			32
+#define BYTE_BITS			8
+
+
 /* macros for whole BigInt */
 #define BIGINT_BITS			1024
-#define BIGINT_BYTES			32
+#define BIGINT_BYTES			128	/* 1024 / 4 */
 #define BIGINT_SIZE_IN_HEX		256
 
 #define BIGINT_DOUBLE_BITS		2048
 
-
-#define WORD_BITS			32
-#define BYTE_BITS			8
 /*
  * for 1024 bit number need 35 blocks
  * 34 blocks with 30 bits digit
  * and 1 block with 4 bits
  */
 
-#define BLOCKS_COUNT			35
-#define BLOCKS_DOUBLE_COUNT		69
-#define BLOCK_CARRY_BITS		2
-
 /* macros for usual block of BigInt */
 #define BLOCK_BITS			30
+#define BLOCK_CARRY_BITS		2
 #define BLOCK_MAX_NUMBER		0x3FFFFFFF
-#define BLOCK_SIZE_IN_HEX		4
 
 
 BigInt::BigInt(unsigned int lengthBits):
@@ -189,7 +186,7 @@ void BigInt::rawArrayToBlocks(std::vector<block> &rawArray)
 	}
 
 	assert(leftBits == countBistLastBlock_);
-	assert(indexBlocks == BLOCKS_COUNT - 1);
+	assert(indexBlocks == size_ - 1);
 
 	blocks_[indexBlocks] = rawArray[indexRaw - 1] >> (WORD_BITS - leftBits);
 }
@@ -333,7 +330,7 @@ void BigInt::add(BigInt &number)
 		assert((carry & 1) == carry);
 	}
 
-	assert(BLOCKS_COUNT - 1 == i);
+	assert(size_ - 1 == i);
 
 	blocks_[i] = blocks_[i] + number.blocks_[i] + carry;
 	carry = blocks_[i] >> countBistLastBlock_;
