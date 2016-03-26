@@ -7,30 +7,33 @@ CFLAGS = -std=c++11 -Wall -Wpedantic
 LFLAGS =
 
 COMMON_SRCS = $(wildcard ./src/*.cpp)
-
-SRCS := $(COMMON_SRCS) main.cpp
-OBJS = $(SRCS:.cpp=.o)
-
-TEST_SRCS = $(wildcard ./tests/*.cpp) $(COMMON_SRCS)
-TEST_OBJS = $(TEST_SRCS:.cpp=.o)
-
 TARGET = App
-TEST_TARGET = testApp
+SRCS =
 
 ifeq ($(MAKECMDGOALS),release)
 	CFLAGS := $(CFLAGS) -O3
 	TARGET := release$(TARGET)
+	SRCS := $(COMMON_SRCS) main.cpp
 endif
 
 ifeq ($(MAKECMDGOALS),debug)
-	CFLAGS := $(CFLAGS) -O0 -g3
+	CFLAGS := $(CFLAGS) -O0 -g3 -DDEBUG_ON
 	TARGET := debug$(TARGET)
+	SRCS := $(COMMON_SRCS) main.cpp
+endif
+
+ifeq ($(MAKECMDGOALS),test)
+	CFLAGS := $(CFLAGS) -O0 -g3 -DDEBUG_ON
+	TARGET := test$(TARGET)
+	SRCS := $(COMMON_SRCS) $(wildcard ./tests/*.cpp)
 endif
 
 ifeq ($(MAKECMDGOALS),clean)
-	TARGET := debug$(TARGET) release$(TARGET)
+	TARGET := debug$(TARGET) release$(TARGET) test$(TARGET)
 endif
 
+
+OBJS = $(SRCS:.cpp=.o)
 
 .PHONY: release debug test clean
 
@@ -40,13 +43,10 @@ release: $(TARGET)
 
 debug: $(TARGET)
 
-test: $(TEST_TARGET)
+test: $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $(TARGET) $(OBJS) $(LFLAGS) $(LIBS)
-
-$(TEST_TARGET): $(TEST_OBJS)
-	$(CC) $(CFLAGS) $(INCLUDES) -o $(TEST_TARGET) $(TEST_OBJS) $(LFLAGS) $(LIBS)
 
 .cpp.o:
 	$(CC) $(CFLAGS) $(INCLUDES) -c $<  -o $@
