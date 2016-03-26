@@ -1,5 +1,4 @@
-#ifndef BIG_INT_H
-#define BIG_INT_H
+#pragma once
 #include <iostream>
 #include <string>
 #include <string.h>
@@ -47,6 +46,3 @@ private:
 	int getPosMostSignificatnBit();
 };
 
-
-
-#endif /* BIG_INT_H */

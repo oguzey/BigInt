@@ -368,7 +368,7 @@ BigInt* BigInt::mul(const BigInt &number, BigInt *result)
 	block c = 0;
 	BigInt *res = result ? result : new BigInt(BIGINT_DOUBLE_BITS);
 
-	assert(res->size_ == BIGINT_DOUBLE_BITS);
+	assert(res->length_ == BIGINT_DOUBLE_BITS);
 
 	for(unsigned int i = 0; i < size_; ++i) {
 		c = 0;

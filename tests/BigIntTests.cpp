@@ -1,8 +1,11 @@
-#include "../include/BigInt.h"
-#include "../logger/logger.h"
 #include <string>
 #include <array>
 #include <assert.h>
+#include "../include/BigInt.h"
+
+#define ALLOCATE_LOGGER
+#include "../logger/logger.h"
+
 
 #define assert_msg(cond, msg)					\
 	if (!(cond)) {						\
