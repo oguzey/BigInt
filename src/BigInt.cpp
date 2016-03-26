@@ -83,19 +83,21 @@ void BigInt::add(BigInt &number)
 
 void BigInt::sub(BigInt &number)
 {
-    block setterCarryBit = BLOCK_MAX_NUMBER + 1;
-    block carryBit = 0;
+	block setterCarryBit = BLOCK_MAX_NUMBER + 1;
+	block carryBit = 0;
+	unsigned int i = 0;
 
-    assert(setterCarryBit == (1 << (BLOCK_BITS + 1)));
+	assert(setterCarryBit == (1 << (BLOCK_BITS + 1)));
 
-    for (unsigned int i = 0; i < size - 1; ++i) {
-        blocks_[i] = (blocks_[i] | setterCarryBit) - number.blocks_[i] - carryBit;
-        carryBit = blocks_[i] >> BLOCK_BITS;
-        assert((carryBit & 1) == carryBit);
-    }
-    // last block
-    blocks_[i] = blocks_[i] - number.blocks_ - carryBit;
-    blocks_[i] &= maxValueLastBlock_;
+	for (i = 0; i < size_ - 1; ++i) {
+		blocks_[i] = (blocks_[i] | setterCarryBit) - number.blocks_[i] - carryBit;
+		carryBit = blocks_[i] >> BLOCK_BITS;
+		assert((carryBit & 1) == carryBit);
+		carryBit ^= 1;
+	}
+	// last block
+	blocks_[i] = blocks_[i] - number.blocks_[i] - carryBit;
+	blocks_[i] &= maxValueLastBlock_;
 }
 
 int BigInt::fromString(const char *hexStr)
@@ -325,7 +327,7 @@ BigInt* BigInt::mul(const BigInt &number, BigInt *result)
 	block c = 0;
 	BigInt *res = result ? result : new BigInt(BIGINT_DOUBLE_BITS);
 
-    assert(res->size_ == BIGINT_DOUBLE_BITS);
+	assert(res->size_ == BIGINT_DOUBLE_BITS);
 
 	for(unsigned int i = 0; i < size_; ++i) {
 		c = 0;
@@ -364,25 +366,25 @@ int BigInt::getPosMostSignificatnBit()
 
 int BigInt::isEqual(const BigInt &number)
 {
-    assert(size_ == number.size_ == BIGINT_BITS);
-    return std::equal(std::begin(blocks_), std::end(blocks_), std::begin(number.blocks_));
+	assert(size_ == number.size_ == BIGINT_BITS);
+	return std::equal(blocks_, blocks_ + size_, number.blocks_);
 }
 
 void BigInt::setMax()
 {
-    memset(blocks_, BLOCK_MAX_NUMBER, size_ - 1);
-    blocks_[size_ - 1] = maxValueLastBlock_;
+	memset(blocks_, BLOCK_MAX_NUMBER, size_ - 1);
+	blocks_[size_ - 1] = maxValueLastBlock_;
 }
 
 void BigInt::setZero()
 {
-    memset(blocks_, 0, size_);
+	memset(blocks_, 0, size_);
 }
 
 void BigInt::setNumber(unsigned int number)
 {
-    memset(blocks_ + 1, 0, size_ - 1);
-    blocks_[0] = number;
+	memset(blocks_ + 1, 0, size_ - 1);
+	blocks_[0] = number;
 }
 
 
