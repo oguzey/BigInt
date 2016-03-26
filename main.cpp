@@ -14,8 +14,8 @@ int main() {
 			"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
 	BigInt number2("1");
 
-	LOG("start value of first number : {}", number1.toString()->c_str());
-	LOG("start value of second number : {}", number2.toString()->c_str());
+	LOG("start value of first number : {}", number1.toString().c_str());
+	LOG("start value of second number : {}", number2.toString().c_str());
 	LOG("--------adding-----------------");
 	//number1.add(number2);
 
@@ -31,9 +31,9 @@ int main() {
 
 	BigInt *res = number1.mul(number2, NULL);
 
-	LOG("Mul: number1 = {}", number1.toString()->c_str());
-	LOG("Mul: number2 = {}", number2.toString()->c_str());
-	LOG("Mul: result = {}", res->toString()->c_str());
+	LOG("Mul: number1 = {}", number1.toString().c_str());
+	LOG("Mul: number2 = {}", number2.toString().c_str());
+	LOG("Mul: result = {}", res->toString().c_str());
 
 	//delete res;
 

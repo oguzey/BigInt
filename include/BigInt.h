@@ -16,12 +16,13 @@ class BigInt {
 public:
 	BigInt();
 	BigInt(const char *strHexNumber);
+	BigInt(std::string &strHexNumber);
 	~BigInt();
 	void add(BigInt &number);
 	void sub(BigInt &number);
 	int fromString(const char *hexString);
 	int fromString(const std::string &hexString);
-	std::string* toString();
+	std::string toString();
 	void shiftLeft(int countBits);
 	void shiftRight(int countBits);
 	BigInt* mul(const BigInt &number, BigInt *result);

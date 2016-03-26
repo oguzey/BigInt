@@ -55,6 +55,12 @@ BigInt::BigInt(const char *strHexNumber) : BigInt()
 	}
 }
 
+BigInt::BigInt(std::string &strHexNumber) : BigInt()
+{
+	if (fromString(strHexNumber)) {
+		WARN("Can not convert from string. Check your string.");
+	}
+}
 BigInt::~BigInt() { delete[] blocks_; }
 
 int BigInt::fromString(const char *hexStr)
@@ -100,9 +106,9 @@ int BigInt::fromString(const std::string &hexString)
 	return fromString(hexString.c_str());
 }
 
-std::string* BigInt::toString()
+std::string BigInt::toString()
 {
-	std::string *output = new std::string("");
+	std::string output("");
 	unsigned int i = 0;
 	std::vector<block> rawArray(length_ / WORD_BITS);
 	std::fill(rawArray.begin(), rawArray.end(), 0);
@@ -120,12 +126,12 @@ std::string* BigInt::toString()
 		//INFO("{}\t{:X}", i, rawArray[i]);
 		for (int j = 0; j < 8; ++j) {
 			char ch = rawArray[i] >> (j * 4) & 0xF;
-			output->push_back(integerToHexChar(ch));
+			output.push_back(integerToHexChar(ch));
 			//DEBUG("parse {} as {}", (int)ch, integerToHexChar(ch));
 		}
 	}
 	//INFO("End of BigInt ( normal array)");
-	std::reverse(output->begin(), output->end());
+	std::reverse(output.begin(), output.end());
 	return output;
 }
 
