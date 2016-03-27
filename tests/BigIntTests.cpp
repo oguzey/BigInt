@@ -1,4 +1,5 @@
 #include <string>
+#include <string.h>
 #include <array>
 #include <assert.h>
 #include "../include/BigInt.h"
@@ -6,11 +7,35 @@
 #define ALLOCATE_LOGGER
 #include "../logger/logger.h"
 
+#define GREEN	"\033[1;32m"
+#define YELLOW	"\033[1;33m"
+#define RED	"\033[1;31m"
+#define RESET_COLOR "\033[0m"
+#define PAINT(word, color) color word RESET_COLOR
 
-#define assert_msg(cond, msg)					\
-	if (!(cond)) {						\
-		CRITICAL("[%s:%d] " msg, __func__, __LINE__);	\
+#define assertStrMsg(str1, str2, msg)						\
+do {										\
+	std::string a_str1 = str1;					\
+	std::string a_str2 = str2;					\
+	if (a_str1 != a_str2) {						\
+		INFO("Str '{}' is not equal to str '{}'", a_str1, a_str2);	\
+		CRITICAL(PAINT("[{}:{}] " msg, RED), __func__, __LINE__);	\
+	}									\
+} while (0)
+
+
+#define assertMsg(cond, msg)							\
+	if (!(cond)) {								\
+		CRITICAL(PAINT("[{}:{}] " msg, RED), __func__, __LINE__);	\
 	}
+
+#define run_test(test_func)			\
+do {						\
+	INFO(PAINT("Start of test "#test_func, YELLOW));	\
+	test_func();				\
+	INFO(PAINT("End of test "#test_func, YELLOW));	\
+} while (0)
+
 
 void testConvertToFromString()
 {
@@ -22,26 +47,27 @@ void testConvertToFromString()
 	}
 	BigInt a(str);
 	std::string new_str = a.toString();
-	assert_msg(str == new_str, "String is not equals.");
+	assertMsg(str == new_str, "String is not equals.");
 }
 
 void testSetValues()
 {
 	BigInt number;
-	std::string number_str;
+	std::string numberStr;
 
 	number.setZero();
-	number_str.resize(256, '0');
-	assert_msg(number.toString() == number_str, "Zero number fail.");
-
-	number.setMax();
-	number_str.resize(256, 'F');
-	assert_msg(number.toString() == number_str, "Max number fail");
+	numberStr.assign(256, '0');
+	assertStrMsg(number.toString(), numberStr, "Zero number fail.");
 
 	number.setNumber(1);
-	number_str.resize(255, '0');
-	number_str.push_back('1');
-	assert_msg(number.toString() == number_str, "Set custom number fail.");
+	numberStr.assign(255, '0');
+	numberStr.push_back('1');
+	assertStrMsg(number.toString(), numberStr, "Set custom number fail.");
+
+	number.setMax();
+	numberStr.assign(256, 'F');
+	assertStrMsg(number.toString(),  numberStr, "Max number fail");
+
 }
 
 void testAddition()
@@ -54,29 +80,35 @@ void testAddition()
 	a.setZero();
 	b.setZero();
 	a.add(b);
-	assert_msg(a.isEqual(zero), "Adding zero failed.");
+	assertMsg(a.isEqual(zero), "Adding zero failed.");
 
 	a.setMax();
 	b.setNumber(1);
 	a.add(b);
-	assert_msg(a.isEqual(zero), "Adding max value failed.");
+	assertMsg(a.isEqual(zero), "Adding max value failed.");
 
 	std::string str;
-	str.resize(256, '8');
+	str.assign(256, '8');
 	a.fromString(str);
-	str.resize(256, '7');
+	str.assign(256, '7');
 	b.fromString(str);
 	a.add(b);
 	b.setMax();
-	assert_msg(a.isEqual(b), "Adding numbers failed.");
+	assertMsg(a.isEqual(b), "Adding numbers failed.");
+
+	a.setMax();
+	b.setNumber(1);
+	a.add(b);
+	zero.setZero();
+	assertMsg(a.isEqual(zero), "Overflow number during addition failed.");
 }
 
 int main(int argc, char *argv[])
 {
 	LOG("Start tests of BigInt implementation...");
-	testConvertToFromString();
-	testSetValues();
-	testAddition();
+	run_test(testConvertToFromString);
+	run_test(testSetValues);
+	run_test(testAddition);
 
 	LOG("End tests.");
 }

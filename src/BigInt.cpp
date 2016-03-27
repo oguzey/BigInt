@@ -7,6 +7,7 @@
 
 #define WORD_BITS			32
 #define BYTE_BITS			8
+#define HEX_CHAR_BITS			4
 
 
 /* macros for whole BigInt */
@@ -66,12 +67,13 @@ BigInt::~BigInt() { delete[] blocks_; }
 int BigInt::fromString(const char *hexStr)
 {
 	int i = 0;
-	size_t maxAmountChars = length_ / BYTE_BITS;
+	size_t maxAmountChars = length_ / HEX_CHAR_BITS;
 	std::vector<block> rawArray(length_ / WORD_BITS);
 	std::fill(rawArray.begin(), rawArray.end(), 0);
 
 	if (strlen(hexStr) > maxAmountChars) {
-		WARN("String too long!");
+		WARN("String too long! Length is '{}'. Possible length is '{}'",
+				strlen(hexStr), maxAmountChars);
 	}
 
 	for (i = (int)strlen(hexStr) - 1; i >= 0; --i) {
@@ -165,7 +167,7 @@ char BigInt::integerToHexChar(int symbol)
 
 void BigInt::rawArrayToBlocks(std::vector<block> &rawArray)
 {
-	int leftBits = 0;
+	unsigned int leftBits = 0;
 	block temp = 0;
 
 	unsigned int indexRaw = 0;
@@ -250,24 +252,26 @@ int BigInt::getPosMostSignificatnBit()
 
 int BigInt::isEqual(const BigInt &number)
 {
-	assert(size_ == number.size_ == BIGINT_BITS);
+	assert(length_ == number.length_);
+	assert(length_ == BIGINT_BITS);
+
 	return std::equal(blocks_, blocks_ + size_, number.blocks_);
 }
 
 void BigInt::setMax()
 {
-	memset(blocks_, BLOCK_MAX_NUMBER, size_ - 1);
+	std::fill(blocks_, blocks_ + size_ - 1, BLOCK_MAX_NUMBER);
 	blocks_[size_ - 1] = maxValueLastBlock_;
 }
 
 void BigInt::setZero()
 {
-	memset(blocks_, 0, size_);
+	memset(blocks_, 0, size_ * sizeof(block));
 }
 
 void BigInt::setNumber(unsigned int number)
 {
-	memset(blocks_ + 1, 0, size_ - 1);
+	memset(blocks_ + 1, 0, (size_ - 1) * sizeof(block));
 	blocks_[0] = number;
 }
 
@@ -349,7 +353,7 @@ void BigInt::sub(BigInt &number)
 	block carryBit = 0;
 	unsigned int i = 0;
 
-	assert(setterCarryBit == (1 << (BLOCK_BITS + 1)));
+	assert(setterCarryBit == (block)(1 << (BLOCK_BITS + 1)));
 
 	for (i = 0; i < size_ - 1; ++i) {
 		blocks_[i] = (blocks_[i] | setterCarryBit) - number.blocks_[i] - carryBit;
