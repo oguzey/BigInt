@@ -62,6 +62,17 @@ BigInt::BigInt(std::string &strHexNumber) : BigInt()
 		WARN("Can not convert from string. Check your string.");
 	}
 }
+
+BigInt::BigInt(BigInt&& number) : length_(number.length_), size_(number.size_),
+	countBistLastBlock_(number.countBistLastBlock_),
+	maxValueLastBlock_(number.countBistLastBlock_)
+{
+	DEBUG("Move constructor called");
+
+	blocks_ = number.blocks_;
+	number.blocks_ = nullptr;
+}
+
 BigInt::~BigInt() { delete[] blocks_; }
 
 int BigInt::fromString(const char *hexStr)

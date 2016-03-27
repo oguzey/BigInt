@@ -18,7 +18,7 @@ public:
 	BigInt(std::string &strHexNumber);
 	BigInt(BigInt&& number);
 	~BigInt();
-	BigInt& operator=(BigInt&& number);
+	BigInt& operator=(BigInt&& number) = delete;
 	void add(BigInt &number);
 	void sub(BigInt &number);
 	BigInt* mul(const BigInt &number, BigInt *result);
