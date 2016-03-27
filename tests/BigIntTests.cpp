@@ -68,6 +68,12 @@ void testSetValues()
 	numberStr.assign(256, 'F');
 	assertStrMsg(number.toString(),  numberStr, "Max number fail");
 
+	number.setZero();
+	assertMsg(number.isZero(), "Number is not zero.");
+
+	number.setNumber(1);
+	assertMsg(number.isZero() == false, "Number is zero.");
+
 }
 
 void testAddition()
@@ -103,12 +109,28 @@ void testAddition()
 	assertMsg(a.isEqual(zero), "Overflow number during addition failed.");
 }
 
+void testCmp()
+{
+	BigInt a, b;
+
+	a.setZero();
+	b.setNumber(255);
+	assertMsg(a.cmp(b) == -1, "Zero greater than 255.");
+	assertMsg(b.cmp(a) == 1, "255 less than zero.");
+
+	a.setNumber(255);
+	assertMsg(a.cmp(b) == 0, "255 != 255.");
+	assertMsg(b.cmp(a) == 0, "255 != 255 (2)");
+}
+
 int main(int argc, char *argv[])
 {
 	LOG("Start tests of BigInt implementation...");
+
 	run_test(testConvertToFromString);
 	run_test(testSetValues);
 	run_test(testAddition);
+	run_test(testCmp);
 
 	LOG("End tests.");
 }

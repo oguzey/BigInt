@@ -258,6 +258,21 @@ int BigInt::isEqual(const BigInt &number)
 	return std::equal(blocks_, blocks_ + size_, number.blocks_);
 }
 
+bool BigInt::isZero()
+{
+	//block toCmp[size_] = {0};
+	//return !memcmp(blocks_, toCmp, size_ * sizeof(block));
+	block *start = blocks_;
+	block *end = blocks_ + size_;
+	while (start != end) {
+		if (*start) {
+			return false;
+		}
+		++start;
+	}
+	return true;
+}
+
 void BigInt::setMax()
 {
 	std::fill(blocks_, blocks_ + size_ - 1, BLOCK_MAX_NUMBER);
@@ -321,6 +336,41 @@ void BigInt::shiftRight(int countBits)
 		blocks_[i - 1] += carryBits << (BLOCK_BITS - countBits);
 		blocks_[i] >>= countBits;
 	}
+}
+
+///
+///  1 if this > number
+/// -1 if number > this
+///  0 if this == number
+///
+int BigInt::cmp(BigInt &number)
+{
+	unsigned int i = 0;
+	unsigned int size = size_;
+	int diff = 0;
+	int j = 0;
+
+	if (size_ > number.size_) {
+		for (i = size_ - 1; i > number.size_ - 1; --i) {
+			if (blocks_[i]) {
+				return 1;
+			}
+		}
+		size = number.size_;
+	} else if (number.size_ > size_) {
+		for (i = number.size_ - 1; i > size_ - 1; --i) {
+			if (number.blocks_[i]) {
+				return -1;
+			}
+		}
+		size = size_;
+	}
+
+	diff = blocks_[size - 1] - number.blocks_[size - 1];
+	for (j = size - 2; j >= 0 && diff == 0; --j) {
+		diff = blocks_[j] - number.blocks_[j];
+	}
+	return diff > 0 ? 1 : diff < 0 ? -1 : 0;
 }
 
 void BigInt::add(BigInt &number)

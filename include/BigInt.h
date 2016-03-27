@@ -16,19 +16,29 @@ public:
 	BigInt();
 	BigInt(const char *strHexNumber);
 	BigInt(std::string &strHexNumber);
+	BigInt(BigInt&& number);
 	~BigInt();
+	BigInt& operator=(BigInt&& number);
 	void add(BigInt &number);
 	void sub(BigInt &number);
+	BigInt* mul(const BigInt &number, BigInt *result);
+
+	///
+	///  1 if this > number
+	/// -1 if number > this
+	///  0 if this == number
+	///
+	int cmp(BigInt &number);
 	int fromString(const char *hexString);
 	int fromString(const std::string &hexString);
 	std::string toString();
 	void shiftLeft(int countBits);
 	void shiftRight(int countBits);
-	BigInt* mul(const BigInt &number, BigInt *result);
 	int isEqual(const BigInt &number);
 	void setMax();
 	void setZero();
 	void setNumber(unsigned int number);
+	bool isZero();
 
 private:
 	block *blocks_;
