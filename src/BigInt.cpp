@@ -313,9 +313,6 @@ void BigInt::shiftRight(int countBits)
 	block maxCarryBlock = fillBits(countBits);
 	block carryBits = 0;
 
-	//for (i = 0; i < countBits; ++i) {
-	//	maxCarryBlock += (1 << i);
-	//}
 	DEBUG("maxCarryBlock = {:X}", maxCarryBlock);
 
 	blocks_[0] >>= countBits;
