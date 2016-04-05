@@ -19,26 +19,29 @@ public:
 	BigInt(BigInt&& number);
 	~BigInt();
 	BigInt& operator=(BigInt&& number) = delete;
-	void add(BigInt &number);
-	void sub(BigInt &number);
+	void add(const BigInt &number);
+	void sub(const BigInt &number);
 	BigInt* mul(const BigInt &number, BigInt *result);
+	bool div(const BigInt &N, const BigInt &D, BigInt *Q, BigInt *R);
 
 	///
 	///  1 if this > number
 	/// -1 if number > this
 	///  0 if this == number
 	///
-	int cmp(BigInt &number);
+	int cmp(const BigInt &number);
 	int fromString(const char *hexString);
 	int fromString(const std::string &hexString);
 	std::string toString();
 	void shiftLeft(int countBits);
 	void shiftRight(int countBits);
+	void setBit(unsigned int position, unsigned int value) const;
+	int getBit(unsigned int position) const;
 	int isEqual(const BigInt &number);
 	void setMax();
 	void setZero();
 	void setNumber(unsigned int number);
-	bool isZero();
+	bool isZero() const;
 
 private:
 	block *blocks_;

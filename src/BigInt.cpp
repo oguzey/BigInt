@@ -269,7 +269,7 @@ int BigInt::isEqual(const BigInt &number)
 	return std::equal(blocks_, blocks_ + size_, number.blocks_);
 }
 
-bool BigInt::isZero()
+bool BigInt::isZero() const
 {
 	//block toCmp[size_] = {0};
 	//return !memcmp(blocks_, toCmp, size_ * sizeof(block));
@@ -354,7 +354,7 @@ void BigInt::shiftRight(int countBits)
 /// -1 if number > this
 ///  0 if this == number
 ///
-int BigInt::cmp(BigInt &number)
+int BigInt::cmp(const BigInt &number)
 {
 	unsigned int i = 0;
 	unsigned int size = size_;
@@ -384,7 +384,30 @@ int BigInt::cmp(BigInt &number)
 	return diff > 0 ? 1 : diff < 0 ? -1 : 0;
 }
 
-void BigInt::add(BigInt &number)
+void BigInt::setBit(unsigned int position, unsigned int value) const
+{
+	assert((value & 1) == value);
+	assert(position >= 0 && position <= length_);
+
+	value = (~value) & 1;
+
+	int posInBlock = position % BLOCK_BITS;
+	block temp = (~((block)value << posInBlock)) & BLOCK_MAX_NUMBER;
+
+	blocks_[position / BLOCK_BITS] &= temp;
+}
+
+int BigInt::getBit(unsigned int position) const
+{
+	assert(position >= 0 && position <= length_);
+
+	block neededBlock = blocks_[position / BLOCK_BITS];
+	int posInBlock = position % BLOCK_BITS;
+	return (neededBlock & ( 1 << posInBlock )) >> posInBlock;
+}
+
+
+void BigInt::add(const BigInt &number)
 {
 	block carry = 0;
 	unsigned int i = 0;
@@ -405,7 +428,7 @@ void BigInt::add(BigInt &number)
 	blocks_[i] &= maxValueLastBlock_;
 }
 
-void BigInt::sub(BigInt &number)
+void BigInt::sub(const BigInt &number)
 {
 	block setterCarryBit = BLOCK_MAX_NUMBER + 1;
 	block carryBit = 0;
@@ -442,5 +465,30 @@ BigInt* BigInt::mul(const BigInt &number, BigInt *result)
 		res->blocks_[i + number.size_] = c;
 	}
 	return res;
+}
+
+bool BigInt::div(const BigInt &N, const BigInt &D, BigInt *Q, BigInt *R)
+{
+	int res;
+
+	if (D.isZero()) {
+		WARN("Could not divide by zero.");
+		return false;
+	}
+
+	Q = new BigInt(BIGINT_BITS);
+	R = new BigInt(BIGINT_BITS);
+
+	int i;
+	for (i = N.length_ - 1; i >= 0; --i) {
+		R->shiftLeft(1);
+		R->setBit(0, N.getBit(i));
+		res = R->cmp(D);
+		if (res == 1 || res == 0) {
+			R->sub(D);
+			Q->setBit(i, 1);
+		}
+	}
+	return true;
 }
 
