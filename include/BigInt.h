@@ -19,6 +19,7 @@ public:
 	BigInt(BigInt&& number);
 	~BigInt();
 	BigInt& operator=(BigInt&& number) = delete;
+	unsigned int getLength();
 	void add(const BigInt &number);
 	void sub(const BigInt &number);
 	BigInt* mul(const BigInt &number, BigInt *result);

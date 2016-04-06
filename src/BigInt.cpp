@@ -75,6 +75,11 @@ BigInt::BigInt(BigInt&& number) : length_(number.length_), size_(number.size_),
 
 BigInt::~BigInt() { delete[] blocks_; }
 
+unsigned int BigInt::getLength()
+{
+	return length_;
+}
+
 int BigInt::fromString(const char *hexStr)
 {
 	int i = 0;
@@ -389,12 +394,14 @@ void BigInt::setBit(unsigned int position, unsigned int value) const
 	assert((value & 1) == value);
 	assert(position >= 0 && position <= length_);
 
-	value = (~value) & 1;
-
 	int posInBlock = position % BLOCK_BITS;
-	block temp = (~((block)value << posInBlock)) & BLOCK_MAX_NUMBER;
+	int posBlock = position / BLOCK_BITS;
 
-	blocks_[position / BLOCK_BITS] &= temp;
+	block temp = (~(1 << posInBlock)) & BLOCK_MAX_NUMBER;
+	// reset needed bit
+	blocks_[posBlock] &= temp;
+	// set new value
+	blocks_[posBlock] |= (block)value << posInBlock;
 }
 
 int BigInt::getBit(unsigned int position) const

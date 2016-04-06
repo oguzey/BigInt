@@ -123,6 +123,35 @@ void testCmp()
 	assertMsg(b.cmp(a) == 0, "255 != 255 (2)");
 }
 
+void testBits()
+{
+	BigInt a, b;
+	unsigned int len = a.getLength();
+	unsigned int i;
+
+	for (i = 0; i < len; ++i) {
+		a.setBit(i, 1);
+	}
+	b.setMax();
+	assertMsg(a.isEqual(b), "Number has not max value.");
+
+	for (i = 0; i < len; ++i) {
+		assertMsg(a.getBit(i) == 1, "Bit is not one.")
+	}
+
+	for (i = len - 1; i > 0; --i) {
+		a.setBit(i, 0);
+	}
+	b.setNumber(1);
+	assertMsg(a.isEqual(b), "Number has not one.");
+	a.setBit(0, 0);
+	assertMsg(a.isZero(), "Number is not zero.");
+
+	for (i = 0; i < len; ++i) {
+		assertMsg(a.getBit(i) == 0, "Bit is not zero.")
+	}
+}
+
 int main(int argc, char *argv[])
 {
 	LOG("Start tests of BigInt implementation...");
@@ -131,6 +160,7 @@ int main(int argc, char *argv[])
 	run_test(testSetValues);
 	run_test(testAddition);
 	run_test(testCmp);
+	run_test(testBits);
 
 	LOG("End tests.");
 }
