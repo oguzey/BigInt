@@ -109,6 +109,41 @@ void testAddition()
 	assertMsg(a.isEqual(zero), "Overflow number during addition failed.");
 }
 
+void testSubtraction()
+{
+	BigInt a;
+	BigInt b;
+	BigInt zero;
+	zero.setZero();
+
+	a.setZero();
+	b.setZero();
+	a.sub(b);
+	assertMsg(a.isZero(), "Number is not zero.");
+
+	b.setNumber(1);
+	a.sub(b);
+	b.setMax();
+	assertMsg(a.isEqual(b), "Numbers is not equals.");
+
+	a.setNumber(1);
+	b.setZero();
+	a.sub(b);
+	b.setNumber(1);
+	assertMsg(a.isEqual(b), "Number is not one.");
+
+	std::string str;
+	str.assign(256, '8');
+	a.fromString(str);
+	str.assign(256, '7');
+	b.fromString(str);
+	a.sub(b);
+
+	str.assign(256, '1');
+	b.fromString(str);
+	assertMsg(a.isEqual(b), "Subtracting numbers failed.");
+}
+
 void testCmp()
 {
 	BigInt a, b;
@@ -159,6 +194,7 @@ int main(int argc, char *argv[])
 	run_test(testConvertToFromString);
 	run_test(testSetValues);
 	run_test(testAddition);
+	run_test(testSubtraction);
 	run_test(testCmp);
 	run_test(testBits);
 

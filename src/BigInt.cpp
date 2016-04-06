@@ -437,17 +437,18 @@ void BigInt::add(const BigInt &number)
 
 void BigInt::sub(const BigInt &number)
 {
-	block setterCarryBit = BLOCK_MAX_NUMBER + 1;
+	block setterCarryBit = BLOCK_MAX_NUMBER + (block)1;
 	block carryBit = 0;
 	unsigned int i = 0;
 
-	assert(setterCarryBit == (block)(1 << (BLOCK_BITS + 1)));
+	assert(setterCarryBit == ((block)1 << BLOCK_BITS));
 
 	for (i = 0; i < size_ - 1; ++i) {
-		blocks_[i] = (blocks_[i] | setterCarryBit) - number.blocks_[i] - carryBit;
-		carryBit = blocks_[i] >> BLOCK_BITS;
+		blocks_[i] |= setterCarryBit;
+		blocks_[i] -= number.blocks_[i] + carryBit;
+		carryBit = !(blocks_[i] >> BLOCK_BITS);
+		blocks_[i] &= BLOCK_MAX_NUMBER;
 		assert((carryBit & 1) == carryBit);
-		carryBit ^= 1;
 	}
 	// last block
 	blocks_[i] = blocks_[i] - number.blocks_[i] - carryBit;
