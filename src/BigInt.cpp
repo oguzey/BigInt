@@ -316,9 +316,9 @@ block BigInt::fillBits(unsigned int amountBits)
 	return number;
 }
 
-void BigInt::shiftLeft(int countBits)
+void BigInt::shiftLeftBlock(unsigned int countBits)
 {
-	assert(countBits >=0 && countBits <= BLOCK_BITS);
+	assert(countBits <= BLOCK_BITS);
 
 	block carryBits = 0;
 	block temp = 0;
@@ -337,14 +337,26 @@ void BigInt::shiftLeft(int countBits)
 	blocks_[i] &= maxValueLastBlock_;
 }
 
-void BigInt::shiftRight(int countBits)
+void BigInt::shiftLeft(unsigned int countBits)
 {
-	assert(countBits >= 0 && countBits <= BLOCK_BITS);
+	if (countBits >= length_) {
+		setZero();
+		return;
+	}
+
+	while (countBits > BLOCK_BITS) {
+		shiftLeftBlock(BLOCK_BITS);
+		countBits -= BLOCK_BITS;
+	}
+	shiftLeftBlock(countBits);
+}
+
+void BigInt::shiftRightBlock(unsigned int countBits)
+{
+	assert(countBits <= BLOCK_BITS);
 	unsigned int i = 0;
 	block maxCarryBlock = fillBits(countBits);
 	block carryBits = 0;
-
-	DEBUG("maxCarryBlock = {:X}", maxCarryBlock);
 
 	blocks_[0] >>= countBits;
 	for (i = 1; i < size_; ++i) {
@@ -352,6 +364,19 @@ void BigInt::shiftRight(int countBits)
 		blocks_[i - 1] += carryBits << (BLOCK_BITS - countBits);
 		blocks_[i] >>= countBits;
 	}
+}
+
+void BigInt::shiftRight(unsigned int countBits)
+{
+	if (countBits >= length_) {
+		setZero();
+		return;
+	}
+	while (countBits > BLOCK_BITS) {
+		shiftRightBlock(BLOCK_BITS);
+		countBits -= BLOCK_BITS;
+	}
+	shiftRightBlock(countBits);
 }
 
 ///
@@ -489,7 +514,7 @@ bool BigInt::div(const BigInt &N, const BigInt &D, BigInt *Q, BigInt *R)
 
 	int i;
 	for (i = N.length_ - 1; i >= 0; --i) {
-		R->shiftLeft(1);
+		R->shiftLeftBlock(1);
 		R->setBit(0, N.getBit(i));
 		res = R->cmp(D);
 		if (res == 1 || res == 0) {

@@ -34,8 +34,10 @@ public:
 	int fromString(const char *hexString);
 	int fromString(const std::string &hexString);
 	std::string toString();
-	void shiftLeft(int countBits);
-	void shiftRight(int countBits);
+	void shiftLeftBlock(unsigned int countBits);
+	void shiftLeft(unsigned int countBits);
+	void shiftRightBlock(unsigned int countBits);
+	void shiftRight(unsigned int countBits);
 	void setBit(unsigned int position, unsigned int value) const;
 	int getBit(unsigned int position) const;
 	int isEqual(const BigInt &number);

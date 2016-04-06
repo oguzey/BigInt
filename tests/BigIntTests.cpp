@@ -187,6 +187,57 @@ void testBits()
 	}
 }
 
+void testShiftLeft()
+{
+	BigInt a, b;
+
+	b.setMax();
+	a.setNumber(1);
+	b.sub(a);
+
+	a.setMax();
+	a.shiftLeft(1);
+	assertMsg(a.isEqual(b), "Shift to 1 is failed.");
+
+	a.shiftLeft(3);
+
+	std::string numberStr;
+	numberStr.assign(255, 'F');
+	numberStr.push_back('0');
+	b.fromString(numberStr);
+	assertMsg(a.isEqual(b), "Shift to 4 is failed.");
+
+	a.shiftLeft(a.getLength() - 4);
+	b.setZero();
+	assertMsg(a.isEqual(b), "Shift to 1024 is failed.");
+}
+
+void testShiftRight()
+{
+	BigInt a, b;
+
+	b.setMax();
+	a.setNumber(1);
+	a.shiftLeft(a.getLength() - 1);
+	b.sub(a);
+
+	a.setMax();
+	a.shiftRight(1);
+	assertMsg(a.isEqual(b), "Shift right 1 failed.");
+
+	a.shiftRight(a.getLength() - 2);
+	b.setNumber(1);
+	assertMsg(a.isEqual(b), "Shift right 1023 failed.");
+
+	a.shiftRight(1);
+	assertMsg(a.isZero(), "Shift right 1024 failed.");
+}
+
+void testMultiplication()
+{
+
+}
+
 int main(int argc, char *argv[])
 {
 	LOG("Start tests of BigInt implementation...");
@@ -195,6 +246,9 @@ int main(int argc, char *argv[])
 	run_test(testSetValues);
 	run_test(testAddition);
 	run_test(testSubtraction);
+	run_test(testMultiplication);
+	run_test(testShiftLeft);
+	run_test(testShiftRight);
 	run_test(testCmp);
 	run_test(testBits);
 
