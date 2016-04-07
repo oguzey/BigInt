@@ -480,12 +480,24 @@ void BigInt::sub(const BigInt &number)
 	blocks_[i] &= maxValueLastBlock_;
 }
 
-BigInt* BigInt::mul(const BigInt &number, BigInt *result)
+BigInt* BigInt::mul(const BigInt &number, BigInt **result)
 {
 	uint64_t temp_res = 0;
 	block c = 0;
-	BigInt *res = result ? result : new BigInt(BIGINT_DOUBLE_BITS);
+	BigInt *res = NULL;
+	if (result) {
+		if (*result) {
+			res = *result;
+			assert(res->length_ == BIGINT_DOUBLE_BITS);
+			res->setZero();
+		} else {
+			res = *result = new BigInt(BIGINT_DOUBLE_BITS);
+		}
+	} else {
+		res = new BigInt(BIGINT_DOUBLE_BITS);
+	}
 
+	assert(res != NULL);
 	assert(res->length_ == BIGINT_DOUBLE_BITS);
 
 	for(unsigned int i = 0; i < size_; ++i) {

@@ -22,7 +22,7 @@ public:
 	unsigned int getLength();
 	void add(const BigInt &number);
 	void sub(const BigInt &number);
-	BigInt* mul(const BigInt &number, BigInt *result);
+	BigInt* mul(const BigInt &number, BigInt **result);
 	bool div(const BigInt &N, const BigInt &D, BigInt *Q, BigInt *R);
 
 	///

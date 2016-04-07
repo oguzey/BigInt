@@ -235,7 +235,18 @@ void testShiftRight()
 
 void testMultiplication()
 {
+	BigInt a, b;
+	BigInt *res = NULL;
+	BigInt *res2 = NULL;
 
+	a.setMax();
+	b.setZero();
+	res = a.mul(b, &res2);
+	assertMsg(res != NULL, "Result of multiplication failed.");
+	assertMsg(res2 == res, "Pass output of multiplication throuth parameters failed.");
+
+	assertMsg(res->isZero(), "Multiplication by zero failed.");
+	delete res;
 }
 
 int main(int argc, char *argv[])
