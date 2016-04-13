@@ -268,10 +268,30 @@ int BigInt::getPosMostSignificatnBit()
 
 int BigInt::isEqual(const BigInt &number)
 {
-	assert(length_ == number.length_);
-	assert(length_ == BIGINT_BITS);
+	block *end, *start;
 
-	return std::equal(blocks_, blocks_ + size_, number.blocks_);
+	if (size_ == number.size_) {
+		return std::equal(blocks_, blocks_ + size_, number.blocks_);
+	} else if (size_ > number.size_) {
+		start = blocks_ + number.size_;
+		end = blocks_ + size_;
+		while (start != end) {
+			if (*start++ != 0) {
+				return false;
+			}
+		}
+		return std::equal(blocks_, blocks_ + number.size_, number.blocks_);
+	} else {
+		start = number.blocks_ + size_;
+		end = number.blocks_ + number.size_;
+		while (start != end) {
+
+			if (*start++ != 0) {
+				return false;
+			}
+		}
+		return std::equal(blocks_, blocks_ + size_, number.blocks_);
+	}
 }
 
 bool BigInt::isZero() const
@@ -330,6 +350,7 @@ void BigInt::shiftLeftBlock(unsigned int countBits)
 		blocks_[i] = (blocks_[i] << countBits) & BLOCK_MAX_NUMBER;
 		// add carry bits from previuos block
 		blocks_[i] += carryBits;
+		assert(blocks_[i] <= BLOCK_MAX_NUMBER);
 		carryBits = temp;
 	}
 	// last block
@@ -441,6 +462,8 @@ int BigInt::getBit(unsigned int position) const
 
 void BigInt::add(const BigInt &number)
 {
+	assert(size_ == number.size_);
+
 	block carry = 0;
 	unsigned int i = 0;
 

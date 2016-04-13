@@ -247,12 +247,51 @@ void testMultiplication()
 
 	assertMsg(res->isZero(), "Multiplication by zero failed.");
 	delete res;
+
+	a.setMax();
+	b.setNumber(1);
+	res = a.mul(b, NULL);
+
+	b.setMax();
+	assertMsg(res->isEqual(b), "Multiplication by one failed.");
+	delete res;
+}
+
+void testIsEqual()
+{
+	BigInt a, b;
+	a.setMax();
+	b.setMax();
+	assertMsg(a.isEqual(b), "IsEqual with equal len of numbers was failed.");
+
+	BigInt *res = NULL;
+	a.setMax();
+	b.setNumber(1);
+	a.mul(b, &res);
+
+	LOG("a = {}", a.toString());
+	LOG("res = {}", res->toString());
+	assertMsg(a.isEqual(*res), "IsEqual(t) with greater number was failed.");
+	assertMsg(res->isEqual(a), "IsEqual(t) with less number was failed.");
+
+	res->shiftLeftBlock(29);
+	for (int i = 0; i < 29; ++i) {
+		res->setBit(i, 1);
+	}
+	LOG("resres = {}", res->toString());
+
+	assertMsg(a.isEqual(*res) == false, "IsEqual(f) with greater number was failed.");
+	assertMsg(res->isEqual(a) == false, "IsEqual(f) with less number was failed.");
+
+	delete res;
+
 }
 
 int main(int argc, char *argv[])
 {
 	LOG("Start tests of BigInt implementation...");
 
+	run_test(testIsEqual);
 	run_test(testConvertToFromString);
 	run_test(testSetValues);
 	run_test(testAddition);
@@ -262,6 +301,7 @@ int main(int argc, char *argv[])
 	run_test(testShiftRight);
 	run_test(testCmp);
 	run_test(testBits);
+
 
 	LOG("End tests.");
 }
