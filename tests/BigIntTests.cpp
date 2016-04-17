@@ -2,6 +2,7 @@
 #include <string.h>
 #include <array>
 #include <assert.h>
+#include <ctime>
 #include "../include/BigInt.h"
 
 #define ALLOCATE_LOGGER
@@ -23,17 +24,40 @@ do {										\
 	}									\
 } while (0)
 
+#define assertEqualMsg(arg1, arg2, msg)						\
+	if (arg1 != arg2) {							\
+		CRITICAL(PAINT("[{}:{}] Arguments '{}' and '{}' not equals. " msg, RED), __func__, __LINE__, arg1, arg2);	\
+	}
 
 #define assertMsg(cond, msg)							\
 	if (!(cond)) {								\
 		CRITICAL(PAINT("[{}:{}] " msg, RED), __func__, __LINE__);	\
 	}
 
-#define run_test(test_func)			\
-do {						\
+#define runTest(test_func)					\
+do {								\
 	INFO(PAINT("Start of test "#test_func, YELLOW));	\
-	test_func();				\
-	INFO(PAINT("End of test "#test_func, YELLOW));	\
+	test_func();						\
+	INFO(PAINT("End of test "#test_func, YELLOW));		\
+} while (0)
+
+inline double mesureTime(void (*function)(void))
+{
+	std::clock_t begin = std::clock();
+	function();
+	std::clock_t end = std::clock();
+	return double(end - begin) / CLOCKS_PER_SEC;
+}
+
+#define mesureTimeRunning(func)						\
+do {									\
+	INFO(PAINT("Start running the function "#func, YELLOW));	\
+	std::clock_t begin = std::clock();				\
+	func();								\
+	std::clock_t end = std::clock();				\
+	INFO(PAINT("End running the function "#func, YELLOW));		\
+	INFO(PAINT("Time of running {:.10f}", YELLOW),			\
+			double(end - begin) / CLOCKS_PER_SEC);		\
 } while (0)
 
 
@@ -231,6 +255,11 @@ void testShiftRight()
 
 	a.shiftRight(1);
 	assertMsg(a.isZero(), "Shift right 1024 failed.");
+
+	a.setNumber(1);
+	a.shiftRightBlock(0);
+	assertMsg(a.isEqual(b), "Shift right 0 failed.");
+
 }
 
 void testMultiplication()
@@ -287,20 +316,121 @@ void testIsEqual()
 
 }
 
+void testMontgomeryMultiplication()
+{
+	BigInt x, y, m;
+	BigInt *res = NULL;
+	x.setNumber(3);
+	y.setNumber(5);
+	m.setNumber(17);
+
+	res = x.montMul(y, m);
+	assertMsg(res != NULL, "Fail during montMull calculation.");
+	LOG("res = {}", res->toString());
+
+	delete res;
+
+	x.fromString("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+		     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+		     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+		     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+	y.fromString("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaFFFFFFFFFF"
+		     "Ffffffffffffffffffffffffffffffff1231723617231218238899798797a979a8a9"
+		     "7a97a987aa78a798797979798cd8c7d87cd987c8d7c9d7c97d9c7d9cdcdcaaaaaaaa"
+		     "aaaaaaaa82134712385732847083576378923674234");
+	m.fromString("bbbbbbbbbddbbcbdbdbcdcbdbcdbcbbdfffffff1231723617231218238899798797a"
+		     "979a8a97a97a987aa78a798797979798cd8c7d87cd987c8d7c9d7c97d9c7d8748236"
+		     "4827368476238468273648273648263641041209809423942091");
+
+	y.setNumber(1);
+
+	x.fromString("4cd");
+	y.fromString("16a0");
+	m.fromString("11bbf");
+
+	res = x.montMul(y, m);
+	assertMsg(res != NULL, "Fail during montMull calculation 2.");
+
+//	LOG("x = {}", x.toString());
+//	LOG("y = {}", y.toString());
+//	LOG("m = {}", m.toString());
+//	LOG("res2 = {}", res->toString());
+
+	delete res;
+}
+
+void testGetPosMostSignificatnBit()
+{
+	BigInt a;
+	int len = a.getLength();
+
+	a.setZero();
+
+	assertEqualMsg(-1, a.getPosMostSignificatnBit(), "Fail for zero");
+
+	a.setNumber(1);
+	assertEqualMsg(0, a.getPosMostSignificatnBit(), "Fail for one");
+
+	a.setZero();
+	for (int i = 0; i < len; ++i) {
+		a.setBit(i, 1);
+		assertEqualMsg(i, a.getPosMostSignificatnBit(), "Fail for loop");
+	}
+}
+
+void testMultiplicationByBit()
+{
+	BigInt a, b;
+
+	b.setMax();
+	a.setMax();
+	a.mulByBit(1);
+	assertMsg(a.isEqual(b), "Fail during mul by one.");
+
+	a.mulByBit(0);
+	assertMsg(a.isZero(), "Fail during mul by zero.");
+}
+
+
+
+void mulBitByOne()
+{
+	BigInt num;
+	num.setMax();
+	for (int i = 0; i < 10000; ++i) {
+		num.mulByBit(1);
+	}
+}
+
+void mulBitByZero()
+{
+	BigInt num;
+	num.setMax();
+	for (int i = 0; i < 10000; ++i) {
+		num.mulByBit(0);
+	}
+}
+
 int main(int argc, char *argv[])
 {
 	LOG("Start tests of BigInt implementation...");
 
-	run_test(testIsEqual);
-	run_test(testConvertToFromString);
-	run_test(testSetValues);
-	run_test(testAddition);
-	run_test(testSubtraction);
-	run_test(testMultiplication);
-	run_test(testShiftLeft);
-	run_test(testShiftRight);
-	run_test(testCmp);
-	run_test(testBits);
+//	runTest(testIsEqual);
+//	runTest(testConvertToFromString);
+//	runTest(testSetValues);
+//	runTest(testAddition);
+//	runTest(testSubtraction);
+//	runTest(testMultiplication);
+//	runTest(testShiftLeft);
+//	runTest(testShiftRight);
+//	runTest(testCmp);
+//	runTest(testBits);
+	runTest(testGetPosMostSignificatnBit);
+	runTest(testMontgomeryMultiplication);
+	runTest(testMultiplicationByBit);
+
+//	mesureTimeRunning(mulBitByOne);
+//	mesureTimeRunning(mulBitByZero);
 
 
 	LOG("End tests.");

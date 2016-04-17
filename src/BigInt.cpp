@@ -37,9 +37,9 @@ BigInt::BigInt(unsigned int lengthBits):
 {
 	assert(lengthBits == BIGINT_BITS || lengthBits == BIGINT_DOUBLE_BITS);
 
-	INFO("Create BigInt with length {}, size {}, countBistLastBlock {},"
-			"maxValueLastBlock_ {:X}",
-			length_, size_, countBistLastBlock_, maxValueLastBlock_);
+//	INFO("Create BigInt with length {}, size {}, countBistLastBlock {},"
+//			"maxValueLastBlock_ {:X}",
+//			length_, size_, countBistLastBlock_, maxValueLastBlock_);
 
 	blocks_ = new block[size_];
 	memset(blocks_, 0, sizeof(block) * size_);
@@ -131,15 +131,9 @@ std::string BigInt::toString()
 	std::vector<block> rawArray(length_ / WORD_BITS);
 	std::fill(rawArray.begin(), rawArray.end(), 0);
 
-	//INFO("BigInt number (blocks): ");
-	//for(; i < size_; ++i) {
-	//	INFO("{}\t{:X}", i, blocks_[i]);
-	//}
-	//INFO("End BigInt (blocks)");
-
 	blocksToRawArray(rawArray);
 
-	INFO("BigInt number (normal array): size is {}", rawArray.size());
+	//INFO("BigInt number (normal array): size is {}", rawArray.size());
 	for(i = 0; i < rawArray.size(); ++i) {
 		//INFO("{}\t{:X}", i, rawArray[i]);
 		for (int j = 0; j < 8; ++j) {
@@ -239,31 +233,36 @@ void BigInt::blocksToRawArray(std::vector<block> &rawArray)
 		//DEBUG("BtA: {:X} + \t {:X}   {}", rawArray[indexRaw], temp,
 		//		(WORD_BITS - acquiredBits));
 		rawArray[indexRaw] += temp;
-		acquiredBits += 2;
+		acquiredBits += BLOCK_CARRY_BITS;
 	}
 }
 
-int BigInt::getPosMostSignificatnBit()
+int BigInt::getPosMostSignificatnBit() const
 {
-	unsigned int position = 0;
+	unsigned int position = length_;
 	block temp = 0;
 	int found = 0;
-	temp = 1 << countBistLastBlock_;
+
+	if (isZero()) {
+		return -1;
+	}
+
+	temp = 1 << (countBistLastBlock_ - 1);
 	while (temp && (found = blocks_[size_ - 1] & temp) == 0) {
-		++position;
+		--position;
 		temp >>= 1;
 	}
 	if (found) {
-		return position;
+		return --position;
 	}
 	for (int i = size_ - 2; i >= 0; --i) {
-		temp = 1 << BLOCK_BITS;
+		temp = 1 << (BLOCK_BITS - 1);
 		while (temp && (found = blocks_[i] & temp) == 0) {
-			++position;
+			--position;
 			temp >>= 1;
 		}
 	}
-	return position ? position : -1;
+	return --position;
 }
 
 int BigInt::isEqual(const BigInt &number)
@@ -405,7 +404,7 @@ void BigInt::shiftRight(unsigned int countBits)
 /// -1 if number > this
 ///  0 if this == number
 ///
-int BigInt::cmp(const BigInt &number)
+int BigInt::cmp(const BigInt &number) const
 {
 	unsigned int i = 0;
 	unsigned int size = size_;
@@ -438,7 +437,7 @@ int BigInt::cmp(const BigInt &number)
 void BigInt::setBit(unsigned int position, unsigned int value) const
 {
 	assert((value & 1) == value);
-	assert(position >= 0 && position <= length_);
+	assert(position >= 0 && position < length_);
 
 	int posInBlock = position % BLOCK_BITS;
 	int posBlock = position / BLOCK_BITS;
@@ -448,6 +447,7 @@ void BigInt::setBit(unsigned int position, unsigned int value) const
 	blocks_[posBlock] &= temp;
 	// set new value
 	blocks_[posBlock] |= (block)value << posInBlock;
+	assert(blocks_[size_ - 1] <= maxValueLastBlock_);
 }
 
 int BigInt::getBit(unsigned int position) const
@@ -459,8 +459,29 @@ int BigInt::getBit(unsigned int position) const
 	return (neededBlock & ( 1 << posInBlock )) >> posInBlock;
 }
 
+//BigInt &BigInt::copy() const
+//{
+//	BigInt number(length_);
+//	unsigned int i;
 
-void BigInt::add(const BigInt &number)
+//	for (i = 0; i < size_; ++i) {
+//		number.blocks_[i] = blocks_[i];
+//	}
+//	return number;
+//}
+
+BigInt* BigInt::copy() const
+{
+	BigInt *number = new BigInt(length_);
+	unsigned int i;
+
+	for (i = 0; i < size_; ++i) {
+		number->blocks_[i] = blocks_[i];
+	}
+	return number;
+}
+
+bool BigInt::add(const BigInt &number)
 {
 	assert(size_ == number.size_);
 
@@ -479,8 +500,14 @@ void BigInt::add(const BigInt &number)
 	assert(size_ - 1 == i);
 
 	blocks_[i] = blocks_[i] + number.blocks_[i] + carry;
+	if (blocks_[i] > maxValueLastBlock_) {
+		DEBUG("carry = {:x}", carry);
+		carry = 1;
+		assert(1 == 0);
+	}
 	carry = blocks_[i] >> countBistLastBlock_;
 	blocks_[i] &= maxValueLastBlock_;
+	return carry;
 }
 
 void BigInt::sub(const BigInt &number)
@@ -535,6 +562,15 @@ BigInt* BigInt::mul(const BigInt &number, BigInt **result)
 	return res;
 }
 
+void BigInt::mulByBit(int bitValue)
+{
+	assert((bitValue & 1) == bitValue);
+
+	if (bitValue == 0) {
+		setZero();
+	}
+}
+
 bool BigInt::div(const BigInt &N, const BigInt &D, BigInt *Q, BigInt *R)
 {
 	int res;
@@ -558,5 +594,86 @@ bool BigInt::div(const BigInt &N, const BigInt &D, BigInt *Q, BigInt *R)
 		}
 	}
 	return true;
+}
+
+BigInt* BigInt::montMul(const BigInt &y, const BigInt &m)
+{
+	assert(length_ == y.length_);
+	assert(length_ == m.length_);
+
+	assert(cmp(m) == -1);
+	assert(y.cmp(m) == -1);
+
+	// gcd(m; b) = 1
+	// b == 2
+	// m should be odd
+	assert(m.getBit(0) == 1);
+
+	// this - x
+	BigInt *A = new BigInt();
+
+	bool overflow = false;
+	unsigned int u = 0;
+	unsigned int y0 = y.getBit(0);
+	unsigned int xi = 0;
+	unsigned int i;
+
+	// fing max len of numbers
+	unsigned int len = m.getPosMostSignificatnBit();
+
+	DEBUG("max len is {}", len);
+
+	for (i = 0; i < length_; ++i) {
+		overflow = false;
+
+		xi = this->getBit(i);
+		assert((xi & 1) == xi);
+		assert((A->getBit(0) & 1) == A->getBit(0));
+		//DEBUG("{})xi = {:x}", i, xi);
+		u = (A->getBit(0) + xi * y0) % 2;
+		assert((u & 1) == u);
+
+		if (xi) {
+			overflow = A->add(y);
+			//DEBUG("Overflow A + y = {}", overflow);
+		}
+		if (u) {
+			bool overflow2 = A->add(m);
+			//DEBUG("Overflow A + m = {}", overflow2);
+			if (overflow) {
+				if (overflow2) {
+					assert(1 == 0);
+				} else {
+					assert(2 == 0);
+				}
+			}
+			overflow = overflow2;
+		}
+		assert(A->getBit(0) == 0);
+		A->shiftRightBlock(1);
+		if (overflow) {
+			//DEBUG("Set overflowed bit");
+			A->setBit(length_ - 1, 1);
+		}
+		//DEBUG("temp {}", A->toString());
+	}
+	if (A->cmp(m) == 1) {
+		A->sub(m);
+		//DEBUG("SUB");
+	}
+	return A;
+}
+
+BigInt* BigInt::mod(const BigInt &m)
+{
+	BigInt *r = NULL;
+	BigInt *tmp = NULL;
+	int q = 0;
+
+	if (cmp(m) == -1) {
+		return this;
+	}
+	r = new BigInt(BIGINT_DOUBLE_BITS);
+	q = 1;
 }
 

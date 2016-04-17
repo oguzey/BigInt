@@ -20,17 +20,19 @@ public:
 	~BigInt();
 	BigInt& operator=(BigInt&& number) = delete;
 	unsigned int getLength();
-	void add(const BigInt &number);
+	bool add(const BigInt &number);
 	void sub(const BigInt &number);
 	BigInt* mul(const BigInt &number, BigInt **result);
+	void mulByBit(int bitValue);
 	bool div(const BigInt &N, const BigInt &D, BigInt *Q, BigInt *R);
+	BigInt* montMul(const BigInt &y, const BigInt &m);
 
 	///
 	///  1 if this > number
 	/// -1 if number > this
 	///  0 if this == number
 	///
-	int cmp(const BigInt &number);
+	int cmp(const BigInt &number) const;
 	int fromString(const char *hexString);
 	int fromString(const std::string &hexString);
 	std::string toString();
@@ -40,11 +42,13 @@ public:
 	void shiftRight(unsigned int countBits);
 	void setBit(unsigned int position, unsigned int value) const;
 	int getBit(unsigned int position) const;
+	BigInt* copy() const;
 	int isEqual(const BigInt &number);
 	void setMax();
 	void setZero();
 	void setNumber(unsigned int number);
 	bool isZero() const;
+	int getPosMostSignificatnBit() const;
 
 private:
 	block *blocks_;
@@ -59,6 +63,5 @@ private:
 	void blocksToRawArray(std::vector<block> &rawArray);
 	char integerToHexChar(int symbol);
 	block fillBits(unsigned int amountBits);
-	int getPosMostSignificatnBit();
 };
 
