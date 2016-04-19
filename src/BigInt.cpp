@@ -459,6 +459,16 @@ int BigInt::getBit(unsigned int position) const
 	return (neededBlock & ( 1 << posInBlock )) >> posInBlock;
 }
 
+int BigInt::clearBit(unsigned int position)
+{
+	block neededBlock = blocks_[position / BLOCK_BITS];
+	int posInBlock = position % BLOCK_BITS;
+
+	int bit = (neededBlock >> posInBlock) & 1;
+	blocks_[position / BLOCK_BITS] &= ~(1 << posInBlock);
+	return bit;
+}
+
 //BigInt &BigInt::copy() const
 //{
 //	BigInt number(length_);
@@ -725,16 +735,33 @@ void BigInt::shutDownMontMul(void *obj) const
 	delete arrObj;
 }
 
-//BigInt* BigInt::mod(const BigInt &m)
-//{
-//	BigInt *r = NULL;
-//	BigInt *tmp = NULL;
-//	int q = 0;
+BigInt* BigInt::mod(const BigInt &m, void *obj)
+{
+	BigInt **arrObj = (BigInt **)obj;
+	BigInt *r = NULL;
+	int k = m.getPosMostSignificatnBit();
+	int mostBSB = getPosMostSignificatnBit();
 
-//	if (cmp(m) == -1) {
-//		return this;
-//	}
-//	r = new BigInt(BIGINT_DOUBLE_BITS);
-//	q = 1;
-//}
+	if (cmp(m) == -1) {
+		return this;
+	}
+	if (mostBSB == k) {
+		sub(m);
+		return this;
+	}
+	r = new BigInt(BIGINT_DOUBLE_BITS);
+
+	int i;
+	for (i = mostBSB; i > k; --i) {
+		if (clearBit(i)) {
+			r->add(*(arrObj[i - k]));
+		}
+	}
+	r->add(*this);
+
+	while (r->cmd(m) == 1) {
+		r->sub(m);
+	}
+	return r;
+}
 

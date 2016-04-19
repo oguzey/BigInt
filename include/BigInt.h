@@ -26,6 +26,7 @@ public:
 	void mulByBit(int bitValue);
 	bool div(const BigInt &N, const BigInt &D, BigInt *Q, BigInt *R);
 	BigInt* montMul(const BigInt &y, const BigInt &m);
+	BigInt* mod(const BigInt &m, void *obj);
 
 	///
 	///  1 if this > number
@@ -42,6 +43,7 @@ public:
 	void shiftRight(unsigned int countBits);
 	void setBit(unsigned int position, unsigned int value) const;
 	int getBit(unsigned int position) const;
+	int clearBit(unsigned int position);
 	BigInt* copy() const;
 	int isEqual(const BigInt &number);
 	void setMax();

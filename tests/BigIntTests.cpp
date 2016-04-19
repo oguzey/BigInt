@@ -209,6 +209,17 @@ void testBits()
 	for (i = 0; i < len; ++i) {
 		assertMsg(a.getBit(i) == 0, "Bit is not zero.")
 	}
+
+	a.setMax();
+	for (i = len - 1; i > 0; --i) {
+		assertEqualMsg(1, a.clearBit(i), "Clear bit fail.");
+	}
+
+	b.setNumber(1);
+	assertMsg(a.isEqual(b), "After clear bit should be one.");
+
+	assertEqualMsg(1, a.clearBit(0), "Clear bit fail.");
+	assertMsg(a.isZero(), "Is zero fail.")
 }
 
 void testShiftLeft()
@@ -418,15 +429,15 @@ int main(int argc, char *argv[])
 {
 	LOG("Start tests of BigInt implementation...");
 
-	runTest(testIsEqual);
-	runTest(testConvertToFromString);
-	runTest(testSetValues);
-	runTest(testAddition);
-	runTest(testSubtraction);
-	runTest(testMultiplication);
-	runTest(testShiftLeft);
-	runTest(testShiftRight);
-	runTest(testCmp);
+//	runTest(testIsEqual);
+//	runTest(testConvertToFromString);
+//	runTest(testSetValues);
+//	runTest(testAddition);
+//	runTest(testSubtraction);
+//	runTest(testMultiplication);
+//	runTest(testShiftLeft);
+//	runTest(testShiftRight);
+//	runTest(testCmp);
 	runTest(testBits);
 	runTest(testGetPosMostSignificatnBit);
 	runTest(testMontgomeryMultiplication);
