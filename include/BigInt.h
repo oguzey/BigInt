@@ -49,6 +49,8 @@ public:
 	void setNumber(unsigned int number);
 	bool isZero() const;
 	int getPosMostSignificatnBit() const;
+	void* initMontMul() const;
+	void shutDownMontMul(void *obj) const;
 
 private:
 	block *blocks_;

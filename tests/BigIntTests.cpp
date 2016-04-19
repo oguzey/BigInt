@@ -348,6 +348,9 @@ void testMontgomeryMultiplication()
 	y.fromString("16a0");
 	m.fromString("11bbf");
 
+	void *obj = m.initMontMul();
+	m.shutDownMontMul(obj);
+
 	res = x.montMul(y, m);
 	assertMsg(res != NULL, "Fail during montMull calculation 2.");
 
@@ -415,22 +418,22 @@ int main(int argc, char *argv[])
 {
 	LOG("Start tests of BigInt implementation...");
 
-//	runTest(testIsEqual);
-//	runTest(testConvertToFromString);
-//	runTest(testSetValues);
-//	runTest(testAddition);
-//	runTest(testSubtraction);
-//	runTest(testMultiplication);
-//	runTest(testShiftLeft);
-//	runTest(testShiftRight);
-//	runTest(testCmp);
-//	runTest(testBits);
+	runTest(testIsEqual);
+	runTest(testConvertToFromString);
+	runTest(testSetValues);
+	runTest(testAddition);
+	runTest(testSubtraction);
+	runTest(testMultiplication);
+	runTest(testShiftLeft);
+	runTest(testShiftRight);
+	runTest(testCmp);
+	runTest(testBits);
 	runTest(testGetPosMostSignificatnBit);
 	runTest(testMontgomeryMultiplication);
 	runTest(testMultiplicationByBit);
 
-//	mesureTimeRunning(mulBitByOne);
-//	mesureTimeRunning(mulBitByZero);
+	mesureTimeRunning(mulBitByOne);
+	mesureTimeRunning(mulBitByZero);
 
 
 	LOG("End tests.");

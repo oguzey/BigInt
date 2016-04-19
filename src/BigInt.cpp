@@ -512,22 +512,36 @@ bool BigInt::add(const BigInt &number)
 
 void BigInt::sub(const BigInt &number)
 {
+	assert(size_ >= number.size_);
+
 	block setterCarryBit = BLOCK_MAX_NUMBER + (block)1;
 	block carryBit = 0;
 	unsigned int i = 0;
 
 	assert(setterCarryBit == ((block)1 << BLOCK_BITS));
 
-	for (i = 0; i < size_ - 1; ++i) {
+	for (i = 0; i < number.size_; ++i) {
 		blocks_[i] |= setterCarryBit;
 		blocks_[i] -= number.blocks_[i] + carryBit;
 		carryBit = !(blocks_[i] >> BLOCK_BITS);
 		blocks_[i] &= BLOCK_MAX_NUMBER;
 		assert((carryBit & 1) == carryBit);
 	}
-	// last block
-	blocks_[i] = blocks_[i] - number.blocks_[i] - carryBit;
-	blocks_[i] &= maxValueLastBlock_;
+	if (size_ == number.size_) {
+		// for last block if nubers are equals
+		blocks_[size_ - 1] &= maxValueLastBlock_;
+	} else {
+		for (i = number.size_;i < size_ - 1; ++i) {
+			blocks_[i] |= setterCarryBit;
+			blocks_[i] -= carryBit;
+			carryBit = !(blocks_[i] >> BLOCK_BITS);
+			blocks_[i] &= BLOCK_MAX_NUMBER;
+			assert((carryBit & 1) == carryBit);
+		}
+		// last block bigger number
+		blocks_[i] = blocks_[i] - carryBit;
+		blocks_[i] &= maxValueLastBlock_;
+	}
 }
 
 BigInt* BigInt::mul(const BigInt &number, BigInt **result)
@@ -664,16 +678,63 @@ BigInt* BigInt::montMul(const BigInt &y, const BigInt &m)
 	return A;
 }
 
-BigInt* BigInt::mod(const BigInt &m)
+///
+/// \brief BigInt::initMontMul		Inin of montgomery multiplication.
+///					Should be called for number module m.
+/// \return				Data for process.
+///
+void* BigInt::initMontMul() const
 {
-	BigInt *r = NULL;
-	BigInt *tmp = NULL;
-	int q = 0;
+	assert(isZero() == false);
 
-	if (cmp(m) == -1) {
-		return this;
+	int mostSignBit = getPosMostSignificatnBit();
+	BigInt **arrObj = new BigInt*[mostSignBit];
+	int i;
+
+	arrObj[0] = new BigInt(BIGINT_DOUBLE_BITS);
+	arrObj[0]->setNumber(1);
+	arrObj[0]->shiftLeft(mostSignBit + 1);
+	DEBUG("most sign bit {}", mostSignBit);
+	DEBUG("init shift arrObj[{}] = {}", 0, arrObj[0]->toString());
+	while(arrObj[0]->cmp(*this) == 1) {
+		arrObj[0]->sub(*this);
 	}
-	r = new BigInt(BIGINT_DOUBLE_BITS);
-	q = 1;
+	DEBUG("init arrObj[{}] = {}", 0, arrObj[0]->toString());
+
+	for (i = 1; i < mostSignBit; ++i) {
+		arrObj[i] = arrObj[i - 1]->copy();
+		arrObj[i]->shiftLeft(1);
+		while(arrObj[i]->cmp(*this) == 1) {
+			arrObj[i]->sub(*this);
+		}
+		DEBUG("init arrObj[{}] = {}", i, arrObj[i]->toString());
+	}
+	return arrObj;
 }
+
+void BigInt::shutDownMontMul(void *obj) const
+{
+	BigInt **arrObj = (BigInt **)obj;
+	int mostSignBit = getPosMostSignificatnBit();
+
+	int i;
+	for (i = 0; i < mostSignBit; ++i) {
+		DEBUG("shutdown arrObj[{}] = {}", i, arrObj[i]->toString());
+		delete arrObj[i];
+	}
+	delete arrObj;
+}
+
+//BigInt* BigInt::mod(const BigInt &m)
+//{
+//	BigInt *r = NULL;
+//	BigInt *tmp = NULL;
+//	int q = 0;
+
+//	if (cmp(m) == -1) {
+//		return this;
+//	}
+//	r = new BigInt(BIGINT_DOUBLE_BITS);
+//	q = 1;
+//}
 
