@@ -75,6 +75,11 @@ BigInt::BigInt(BigInt&& number) : length_(number.length_), size_(number.size_),
 
 BigInt::~BigInt() { delete[] blocks_; }
 
+BigInt* BigInt::getDoubleNumber()
+{
+	return new BigInt(BIGINT_DOUBLE_BITS);
+}
+
 unsigned int BigInt::getLength()
 {
 	return length_;
@@ -759,7 +764,7 @@ BigInt* BigInt::mod(const BigInt &m, void *obj)
 	}
 	r->add(*this);
 
-	while (r->cmd(m) == 1) {
+	while (r->cmp(m) == 1) {
 		r->sub(m);
 	}
 	return r;

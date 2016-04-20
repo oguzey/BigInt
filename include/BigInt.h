@@ -19,6 +19,10 @@ public:
 	BigInt(BigInt&& number);
 	~BigInt();
 	BigInt& operator=(BigInt&& number) = delete;
+	///
+	/// only for tests
+	///
+	static BigInt* getDoubleNumber();
 	unsigned int getLength();
 	bool add(const BigInt &number);
 	void sub(const BigInt &number);

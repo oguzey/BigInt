@@ -405,6 +405,25 @@ void testMultiplicationByBit()
 	assertMsg(a.isZero(), "Fail during mul by zero.");
 }
 
+void testReductionModule()
+{
+	BigInt *a = BigInt::getDoubleNumber();
+	a->fromString("f7b15cdf");
+
+	BigInt m("11bbf");
+
+	LOG("a = {}", a->toString());
+	LOG("m = {}", m.toString());
+
+	void *obj = m.initMontMul();
+
+	a->mod(m, obj);
+
+	m.shutDownMontMul(obj);
+
+	LOG("became a = {}", a->toString());
+	delete a;
+}
 
 
 void mulBitByOne()
@@ -442,9 +461,10 @@ int main(int argc, char *argv[])
 	runTest(testGetPosMostSignificatnBit);
 	runTest(testMontgomeryMultiplication);
 	runTest(testMultiplicationByBit);
+	runTest(testReductionModule);
 
-	mesureTimeRunning(mulBitByOne);
-	mesureTimeRunning(mulBitByZero);
+	//mesureTimeRunning(mulBitByOne);
+	//mesureTimeRunning(mulBitByZero);
 
 
 	LOG("End tests.");
