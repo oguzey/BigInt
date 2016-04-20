@@ -245,30 +245,25 @@ void BigInt::blocksToRawArray(std::vector<block> &rawArray) const
 
 int BigInt::getPosMostSignificatnBit() const
 {
-	unsigned int position = length_;
-	block temp = 0;
-	int found = 0;
+	int i;
+	int position = length_ - 1;
 
-	if (isZero()) {
+	if (blocks_[size_ - 1]) {
+		assert(blocks_[size_ - 1] <= maxValueLastBlock_);
+		return position - (__builtin_clz(blocks_[size_ - 1]) - (WORD_BITS - countBistLastBlock_));
+	}
+	position -= countBistLastBlock_;
+
+	for (i = size_ - 2; i >= 0 && blocks_[i] == 0; --i) {
+		position -= BLOCK_BITS;
+	}
+	if (i == -1) {
+		// number is zero
 		return -1;
+	} else {
+		assert(blocks_[i] <= BLOCK_MAX_NUMBER);
+		return position - (__builtin_clz(blocks_[i]) - (WORD_BITS - BLOCK_BITS));
 	}
-
-	temp = 1 << (countBistLastBlock_ - 1);
-	while (temp && (found = blocks_[size_ - 1] & temp) == 0) {
-		--position;
-		temp >>= 1;
-	}
-	if (found) {
-		return --position;
-	}
-	for (int i = size_ - 2; i >= 0; --i) {
-		temp = 1 << (BLOCK_BITS - 1);
-		while (temp && (found = blocks_[i] & temp) == 0) {
-			--position;
-			temp >>= 1;
-		}
-	}
-	return --position;
 }
 
 int BigInt::isEqual(const BigInt &number)
@@ -724,7 +719,7 @@ void BigInt::initModularReduction()
 	assert(preComputedTable_ == NULL);
 
 	int mostSignBit = getPosMostSignificatnBit();
-	preComputedTable_ = new BigInt*[mostSignBit];
+	preComputedTable_ = new BigInt*[mostSignBit + 1];
 	int i;
 
 	preComputedTable_[0] = new BigInt(BIGINT_DOUBLE_BITS);
@@ -737,7 +732,7 @@ void BigInt::initModularReduction()
 	}
 	//DEBUG("init table[{}] = {}", 0, table[0]->toString());
 
-	for (i = 1; i < mostSignBit; ++i) {
+	for (i = 1; i <= mostSignBit; ++i) {
 		preComputedTable_[i] = preComputedTable_[i - 1]->copy();
 		preComputedTable_[i]->shiftLeft(1);
 		while(preComputedTable_[i]->cmp(*this) == 1) {
@@ -755,7 +750,7 @@ void BigInt::shutDownModularReduction()
 	int mostSignBit = getPosMostSignificatnBit();
 
 	int i;
-	for (i = 0; i < mostSignBit; ++i) {
+	for (i = 0; i <= mostSignBit; ++i) {
 		//DEBUG("shutdown table[{}] = {}", i, table[i]->toString());
 		delete preComputedTable_[i];
 	}
@@ -771,10 +766,8 @@ void BigInt::mod(const BigInt &m)
 	BigInt r(BIGINT_DOUBLE_BITS);
 	int k = m.getPosMostSignificatnBit();
 	int posMostSignBitZ = getPosMostSignificatnBit();
-	DEBUG("k = {}, len(z) = {}", k, posMostSignBitZ);
-	assert(posMostSignBitZ < 2 * k);
 
-	DEBUG("mod input x  = {}", toString());
+	assert(posMostSignBitZ <= 2 * k);
 
 	if (cmp(m) == -1) {
 		return;
@@ -792,8 +785,6 @@ void BigInt::mod(const BigInt &m)
 	r.add(*this);
 
 	while (r.cmp(m) == 1) {
-		DEBUG("r = {}", r.toString());
-		DEBUG("m = {}", m.toString());
 		r.sub(m);
 	}
 	copyContent(r);

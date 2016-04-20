@@ -338,8 +338,17 @@ void testMontgomeryMultiplication()
 	x.mulMont(y, m, ret);
 	m.shutDownModularReduction();
 	check.setNumber(15);
-	assertMsg(ret.isEqual(check), "Fail mont mul.");
-	LOG("Res should be equal to 15. Real is {}", ret.toString());
+	assertMsg(ret.isEqual(check), "Fail mont mul in simple case.");
+
+	x.fromString("4cd");
+	y.fromString("16a0");
+	m.fromString("11bbf");
+	check.setNumber(0x11AC1);
+
+	m.initModularReduction();
+	x.mulMont(y, m, ret);
+	m.shutDownModularReduction();
+	assertMsg(ret.isEqual(check), "Fail mont mul in midle case.");
 
 	x.fromString("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 		     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
@@ -350,22 +359,19 @@ void testMontgomeryMultiplication()
 	m.fromString("bbbbbbbbbddbbcbdbdbcdcbdbcdbcbbdfffffff1231723617231218238899798797a"
 		     "979a8a97a97a987aa78a798797979798cd8c7d87cd987c8d7c9d7c97d9c7d8748236"
 		     "4827368476238468273648273648263641041209809423942091");
-
-//	y.setNumber(1);
-
-//	x.fromString("4cd");
-//	y.fromString("16a0");
-//	m.fromString("11bbf");
+	check.fromString("A4E23E498064BFB3CC0D5F510A9D94BD062BECE7ED22DAE3C9ED62336E106D64"
+			 "EABF956A92A94710B96112F2955BE4D87DB247F525E637CBA627B337B28EC50B"
+			 "F86499DF8E0E02DDE203D9E237F213FE865699021B87553412878A427811");
 
 	m.initModularReduction();
 	x.mulMont(y, m, ret);
 	m.shutDownModularReduction();
-	check.setNumber(0x11AC1);
-	assertMsg(ret.isEqual(check), "Fail mont mul.");
-	LOG("x = {}", x.toString());
-	LOG("y = {}", y.toString());
-	LOG("m = {}", m.toString());
-	LOG("Should be 11AC1 but real is {}", ret.toString());
+	assertMsg(ret.isEqual(check), "Fail mont mul in large case.");
+
+//	LOG("x = {}", x.toString());
+//	LOG("y = {}", y.toString());
+//	LOG("m = {}", m.toString());
+//	LOG("Should be 11AC1 but real is {}", ret.toString());
 }
 
 void testGetPosMostSignificatnBit()
