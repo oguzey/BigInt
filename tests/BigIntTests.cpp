@@ -407,6 +407,7 @@ void testMultiplicationByBit()
 
 void testReductionModule()
 {
+	BigInt *res = NULL;
 	BigInt *a = BigInt::getDoubleNumber();
 	a->fromString("f7b15cdf");
 
@@ -417,12 +418,13 @@ void testReductionModule()
 
 	void *obj = m.initMontMul();
 
-	a->mod(m, obj);
+	res = a->mod(m, obj);
 
 	m.shutDownMontMul(obj);
 
-	LOG("became a = {}", a->toString());
+	LOG("res = {}", res->toString());
 	delete a;
+	delete res;
 }
 
 

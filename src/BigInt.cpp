@@ -708,7 +708,7 @@ void* BigInt::initMontMul() const
 
 	arrObj[0] = new BigInt(BIGINT_DOUBLE_BITS);
 	arrObj[0]->setNumber(1);
-	arrObj[0]->shiftLeft(mostSignBit + 1);
+	arrObj[0]->shiftLeft(mostSignBit);
 	DEBUG("most sign bit {}", mostSignBit);
 	DEBUG("init shift arrObj[{}] = {}", 0, arrObj[0]->toString());
 	while(arrObj[0]->cmp(*this) == 1) {
@@ -745,27 +745,33 @@ BigInt* BigInt::mod(const BigInt &m, void *obj)
 	BigInt **arrObj = (BigInt **)obj;
 	BigInt *r = NULL;
 	int k = m.getPosMostSignificatnBit();
-	int mostBSB = getPosMostSignificatnBit();
+	int posMostSignBitZ = getPosMostSignificatnBit();
 
 	if (cmp(m) == -1) {
 		return this;
 	}
-	if (mostBSB == k) {
+	if (posMostSignBitZ == k) {
 		sub(m);
 		return this;
 	}
 	r = new BigInt(BIGINT_DOUBLE_BITS);
 
+	DEBUG("mod) z = {}", toString());
 	int i;
-	for (i = mostBSB; i > k; --i) {
+	for (i = posMostSignBitZ; i >= k; --i) {
+		DEBUG("mod) get bit {}", i);
 		if (clearBit(i)) {
+			DEBUG("mod) add number {}", i - k);
 			r->add(*(arrObj[i - k]));
 		}
 	}
+	DEBUG("mod) last add z = {}", toString());
 	r->add(*this);
+	DEBUG("mod) r = {}", r->toString());
 
 	while (r->cmp(m) == 1) {
 		r->sub(m);
+		DEBUG("mod) sub r = {}", r->toString());
 	}
 	return r;
 }
