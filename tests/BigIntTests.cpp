@@ -359,8 +359,8 @@ void testMontgomeryMultiplication()
 	y.fromString("16a0");
 	m.fromString("11bbf");
 
-	void *obj = m.initMontMul();
-	m.shutDownMontMul(obj);
+	m.initMontMul();
+	m.shutDownMontMul();
 
 	res = x.montMul(y, m);
 	assertMsg(res != NULL, "Fail during montMull calculation 2.");
@@ -407,24 +407,34 @@ void testMultiplicationByBit()
 
 void testReductionModule()
 {
+	BigInt check;
 	BigInt *res = NULL;
 	BigInt *a = BigInt::getDoubleNumber();
 	a->fromString("f7b15cdf");
 
 	BigInt m("11bbf");
 
-	LOG("a = {}", a->toString());
-	LOG("m = {}", m.toString());
+	m.initMontMul();
 
-	void *obj = m.initMontMul();
+	res = a->mod(m);
+	check.fromString("FA57");
+	assertMsg(check.isEqual(*res), "Mod fail.");
 
-	res = a->mod(m, obj);
-
-	m.shutDownMontMul(obj);
-
-	LOG("res = {}", res->toString());
-	delete a;
 	delete res;
+
+	a->fromString("34fd");
+	res = a->mod(m);
+	check.fromString("34FD");
+	assertMsg(check.isEqual(*res), "Mod fail 2.");
+
+	a->fromString("134fd");
+	res = a->mod(m);
+	check.fromString("193E");
+	assertMsg(check.isEqual(*res), "Mod fail 3.");
+
+	m.shutDownMontMul();
+
+	delete a;
 }
 
 

@@ -43,6 +43,7 @@ BigInt::BigInt(unsigned int lengthBits):
 
 	blocks_ = new block[size_];
 	memset(blocks_, 0, sizeof(block) * size_);
+	preComputedTable = NULL;
 }
 
 BigInt::BigInt() : BigInt(BIGINT_BITS)
@@ -694,55 +695,63 @@ BigInt* BigInt::montMul(const BigInt &y, const BigInt &m)
 }
 
 ///
-/// \brief BigInt::initMontMul		Inin of montgomery multiplication.
+/// \brief BigInt::initMontMul		Init of montgomery multiplication.
 ///					Should be called for number module m.
-/// \return				Data for process.
 ///
-void* BigInt::initMontMul() const
+void BigInt::initMontMul()
 {
 	assert(isZero() == false);
+	assert(preComputedTable == NULL);
 
 	int mostSignBit = getPosMostSignificatnBit();
-	BigInt **arrObj = new BigInt*[mostSignBit];
+	preComputedTable = new BigInt*[mostSignBit];
 	int i;
 
-	arrObj[0] = new BigInt(BIGINT_DOUBLE_BITS);
-	arrObj[0]->setNumber(1);
-	arrObj[0]->shiftLeft(mostSignBit);
-	DEBUG("most sign bit {}", mostSignBit);
-	DEBUG("init shift arrObj[{}] = {}", 0, arrObj[0]->toString());
-	while(arrObj[0]->cmp(*this) == 1) {
-		arrObj[0]->sub(*this);
+	preComputedTable[0] = new BigInt(BIGINT_DOUBLE_BITS);
+	preComputedTable[0]->setNumber(1);
+	preComputedTable[0]->shiftLeft(mostSignBit);
+	//DEBUG("most sign bit {}", mostSignBit);
+	//DEBUG("init shift table[{}] = {}", 0, preComputedTable[0]->toString());
+	while(preComputedTable[0]->cmp(*this) == 1) {
+		preComputedTable[0]->sub(*this);
 	}
-	DEBUG("init arrObj[{}] = {}", 0, arrObj[0]->toString());
+	//DEBUG("init table[{}] = {}", 0, table[0]->toString());
 
 	for (i = 1; i < mostSignBit; ++i) {
-		arrObj[i] = arrObj[i - 1]->copy();
-		arrObj[i]->shiftLeft(1);
-		while(arrObj[i]->cmp(*this) == 1) {
-			arrObj[i]->sub(*this);
+		preComputedTable[i] = preComputedTable[i - 1]->copy();
+		preComputedTable[i]->shiftLeft(1);
+		while(preComputedTable[i]->cmp(*this) == 1) {
+			preComputedTable[i]->sub(*this);
 		}
-		DEBUG("init arrObj[{}] = {}", i, arrObj[i]->toString());
+		//DEBUG("init table[{}] = {}", i, table[i]->toString());
 	}
-	return arrObj;
+	INFO("Init of montgomery multiplication done.");
 }
 
-void BigInt::shutDownMontMul(void *obj) const
+///
+/// \brief BigInt::shutDownMontMul	Shut down of montgomery multiplication.
+///					Should be called for number module m.
+///
+void BigInt::shutDownMontMul()
 {
-	BigInt **arrObj = (BigInt **)obj;
+	assert(preComputedTable != NULL);
+
 	int mostSignBit = getPosMostSignificatnBit();
 
 	int i;
 	for (i = 0; i < mostSignBit; ++i) {
-		DEBUG("shutdown arrObj[{}] = {}", i, arrObj[i]->toString());
-		delete arrObj[i];
+		//DEBUG("shutdown table[{}] = {}", i, table[i]->toString());
+		delete preComputedTable[i];
 	}
-	delete arrObj;
+	delete[] preComputedTable;
+	preComputedTable = NULL;
+	INFO("Shut down of montgomery multiplication done.");
 }
 
-BigInt* BigInt::mod(const BigInt &m, void *obj)
+BigInt* BigInt::mod(const BigInt &m)
 {
-	BigInt **arrObj = (BigInt **)obj;
+	assert(m.preComputedTable != NULL);
+
 	BigInt *r = NULL;
 	int k = m.getPosMostSignificatnBit();
 	int posMostSignBitZ = getPosMostSignificatnBit();
@@ -756,22 +765,22 @@ BigInt* BigInt::mod(const BigInt &m, void *obj)
 	}
 	r = new BigInt(BIGINT_DOUBLE_BITS);
 
-	DEBUG("mod) z = {}", toString());
+	//DEBUG("mod) z = {}", toString());
 	int i;
 	for (i = posMostSignBitZ; i >= k; --i) {
-		DEBUG("mod) get bit {}", i);
+		//DEBUG("mod) get bit {}", i);
 		if (clearBit(i)) {
-			DEBUG("mod) add number {}", i - k);
-			r->add(*(arrObj[i - k]));
+			//DEBUG("mod) add number {}", i - k);
+			r->add(*(m.preComputedTable[i - k]));
 		}
 	}
-	DEBUG("mod) last add z = {}", toString());
+	//DEBUG("mod) last add z = {}", toString());
 	r->add(*this);
-	DEBUG("mod) r = {}", r->toString());
+	//DEBUG("mod) r = {}", r->toString());
 
 	while (r->cmp(m) == 1) {
 		r->sub(m);
-		DEBUG("mod) sub r = {}", r->toString());
+		//DEBUG("mod) sub r = {}", r->toString());
 	}
 	return r;
 }

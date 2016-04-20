@@ -30,7 +30,7 @@ public:
 	void mulByBit(int bitValue);
 	bool div(const BigInt &N, const BigInt &D, BigInt *Q, BigInt *R);
 	BigInt* montMul(const BigInt &y, const BigInt &m);
-	BigInt* mod(const BigInt &m, void *obj);
+	BigInt* mod(const BigInt &m);
 
 	///
 	///  1 if this > number
@@ -55,8 +55,8 @@ public:
 	void setNumber(unsigned int number);
 	bool isZero() const;
 	int getPosMostSignificatnBit() const;
-	void* initMontMul() const;
-	void shutDownMontMul(void *obj) const;
+	void initMontMul();
+	void shutDownMontMul();
 
 private:
 	block *blocks_;
@@ -64,6 +64,13 @@ private:
 	const unsigned int size_;
 	const unsigned int countBistLastBlock_;
 	const block maxValueLastBlock_;
+
+	///
+	/// Using for Montgomery multiplication.
+	/// You should run initMontMul for module m before start multiplication
+	/// operation. After that you should run shutDownMontMul.
+	///
+	BigInt **preComputedTable;
 
 	BigInt(unsigned int lengthBits);
 	int hexCharToInteger(char digit);
