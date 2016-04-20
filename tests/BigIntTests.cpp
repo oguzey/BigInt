@@ -334,8 +334,9 @@ void testMontgomeryMultiplication()
 	x.setNumber(3);
 	y.setNumber(5);
 	m.setNumber(17);
-
+	m.initMontMul();
 	res = x.montMul(y, m);
+	m.shutDownMontMul();
 	assertMsg(res != NULL, "Fail during montMull calculation.");
 	LOG("res = {}", res->toString());
 
@@ -360,9 +361,8 @@ void testMontgomeryMultiplication()
 	m.fromString("11bbf");
 
 	m.initMontMul();
-	m.shutDownMontMul();
-
 	res = x.montMul(y, m);
+	m.shutDownMontMul();
 	assertMsg(res != NULL, "Fail during montMull calculation 2.");
 
 //	LOG("x = {}", x.toString());

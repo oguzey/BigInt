@@ -630,6 +630,7 @@ BigInt* BigInt::montMul(const BigInt &y, const BigInt &m)
 {
 	assert(length_ == y.length_);
 	assert(length_ == m.length_);
+	assert(m.preComputedTable);
 
 	assert(cmp(m) == -1);
 	assert(y.cmp(m) == -1);
@@ -734,7 +735,7 @@ void BigInt::initMontMul()
 ///
 void BigInt::shutDownMontMul()
 {
-	assert(preComputedTable != NULL);
+	assert(preComputedTable);
 
 	int mostSignBit = getPosMostSignificatnBit();
 
@@ -750,7 +751,7 @@ void BigInt::shutDownMontMul()
 
 BigInt* BigInt::mod(const BigInt &m)
 {
-	assert(m.preComputedTable != NULL);
+	assert(m.preComputedTable);
 
 	BigInt *r = NULL;
 	int k = m.getPosMostSignificatnBit();
