@@ -29,8 +29,8 @@ public:
 	BigInt* mul(const BigInt &number, BigInt **result);
 	void mulByBit(int bitValue);
 	bool div(const BigInt &N, const BigInt &D, BigInt *Q, BigInt *R);
-	BigInt* mulMont(const BigInt &y, const BigInt &m);
-	BigInt* mod(const BigInt &m);
+	void mulMont(const BigInt &y, const BigInt &m, BigInt &ret);
+	void mod(const BigInt &m);
 
 	///
 	///  1 if this > number
@@ -40,7 +40,7 @@ public:
 	int cmp(const BigInt &number) const;
 	int fromString(const char *hexString);
 	int fromString(const std::string &hexString);
-	std::string toString();
+	std::string toString() const;
 	void shiftLeftBlock(unsigned int countBits);
 	void shiftLeft(unsigned int countBits);
 	void shiftRightBlock(unsigned int countBits);
@@ -86,8 +86,8 @@ private:
 	BigInt(unsigned int lengthBits);
 	int hexCharToInteger(char digit);
 	void rawArrayToBlocks(std::vector<block> &rawArray);
-	void blocksToRawArray(std::vector<block> &rawArray);
-	char integerToHexChar(int symbol);
+	void blocksToRawArray(std::vector<block> &rawArray) const;
+	char integerToHexChar(int symbol) const;
 	block fillBits(unsigned int amountBits);
 };
 

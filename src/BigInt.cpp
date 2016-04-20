@@ -130,7 +130,7 @@ int BigInt::fromString(const std::string &hexString)
 	return fromString(hexString.c_str());
 }
 
-std::string BigInt::toString()
+std::string BigInt::toString() const
 {
 	std::string output("");
 	unsigned int i = 0;
@@ -171,7 +171,7 @@ int BigInt::hexCharToInteger(char digit)
 	return -1;
 }
 
-char BigInt::integerToHexChar(int symbol)
+char BigInt::integerToHexChar(int symbol) const
 {
 	assert(symbol >= 0x0 && symbol <= 0xF);
 	if (symbol >= 0 && symbol <= 9) {
@@ -220,7 +220,7 @@ void BigInt::rawArrayToBlocks(std::vector<block> &rawArray)
  * 				human readable format.
  * @param rawArray		[output] Array for numbers.
  */
-void BigInt::blocksToRawArray(std::vector<block> &rawArray)
+void BigInt::blocksToRawArray(std::vector<block> &rawArray) const
 {
 	unsigned int acquiredBits = 0;
 	int indexBlocks = 0;
@@ -643,7 +643,7 @@ bool BigInt::div(const BigInt &N, const BigInt &D, BigInt *Q, BigInt *R)
 	return true;
 }
 
-BigInt* BigInt::mulMont(const BigInt &y, const BigInt &m)
+void BigInt::mulMont(const BigInt &y, const BigInt &m, BigInt &ret)
 {
 	assert(length_ == y.length_);
 	assert(length_ == m.length_);
@@ -658,7 +658,7 @@ BigInt* BigInt::mulMont(const BigInt &y, const BigInt &m)
 	assert(m.getBit(0) == 1);
 
 	// this - x
-	BigInt *A = new BigInt(BIGINT_DOUBLE_BITS);
+	BigInt result(BIGINT_DOUBLE_BITS);
 
 	bool overflow = false;
 	unsigned int u = 0;
@@ -676,17 +676,17 @@ BigInt* BigInt::mulMont(const BigInt &y, const BigInt &m)
 
 		xi = this->getBit(i);
 		assert((xi & 1) == xi);
-		assert((A->getBit(0) & 1) == A->getBit(0));
+		assert((result.getBit(0) & 1) == result.getBit(0));
 		//DEBUG("{})xi = {:x}", i, xi);
-		u = (A->getBit(0) + xi * y0) % 2;
+		u = (result.getBit(0) + xi * y0) % 2;
 		assert((u & 1) == u);
 
 		if (xi) {
-			overflow = A->add(y);
+			overflow = result.add(y);
 			//DEBUG("Overflow A + y = {}", overflow);
 		}
 		if (u) {
-			bool overflow2 = A->add(m);
+			bool overflow2 = result.add(m);
 			//DEBUG("Overflow A + m = {}", overflow2);
 			if (overflow) {
 				if (overflow2) {
@@ -697,21 +697,25 @@ BigInt* BigInt::mulMont(const BigInt &y, const BigInt &m)
 			}
 			overflow = overflow2;
 		}
-		assert(A->getBit(0) == 0);
-		A->shiftRightBlock(1);
+		assert(result.getBit(0) == 0);
+		result.shiftRightBlock(1);
 		if (overflow) {
 			//DEBUG("Set overflowed bit");
-			A->setBit(length_ - 1, 1);
+			result.setBit(length_ - 1, 1);
 		}
 		//DEBUG("temp {}", A->toString());
 	}
-	if (A->cmp(m) == 1) {
-		A->sub(m);
+	if (result.cmp(m) == 1) {
+		result.sub(m);
 		//DEBUG("SUB");
 	}
-	DEBUG("temp {}", A->toString());
-	A->shiftLeft(len);
-	return A->mod(m);
+	DEBUG("temp {} mostSigBit = {}", result.toString(), result.getPosMostSignificatnBit());
+	result.shiftLeft(len);
+	DEBUG("temp shift {},  mostSigBit = {}", result.toString(), result.getPosMostSignificatnBit());
+	result.mod(m);
+
+	assert(result.getPosMostSignificatnBit() <= BIGINT_BITS);
+	ret.copyContent(result);
 }
 
 void BigInt::initModularReduction()
@@ -760,40 +764,38 @@ void BigInt::shutDownModularReduction()
 	INFO("Shut down of montgomery multiplication done.");
 }
 
-BigInt* BigInt::mod(const BigInt &m)
+void BigInt::mod(const BigInt &m)
 {
 	assert(m.preComputedTable_);
 
-	BigInt *r = NULL;
+	BigInt r(BIGINT_DOUBLE_BITS);
 	int k = m.getPosMostSignificatnBit();
 	int posMostSignBitZ = getPosMostSignificatnBit();
+	DEBUG("k = {}, len(z) = {}", k, posMostSignBitZ);
+	assert(posMostSignBitZ < 2 * k);
+
+	DEBUG("mod input x  = {}", toString());
 
 	if (cmp(m) == -1) {
-		return this;
+		return;
 	}
 	if (posMostSignBitZ == k) {
 		sub(m);
-		return this;
+		return;
 	}
-	r = new BigInt(BIGINT_DOUBLE_BITS);
-
-	//DEBUG("mod) z = {}", toString());
 	int i;
 	for (i = posMostSignBitZ; i >= k; --i) {
-		//DEBUG("mod) get bit {}", i);
 		if (clearBit(i)) {
-			//DEBUG("mod) add number {}", i - k);
-			r->add(*(m.preComputedTable_[i - k]));
+			r.add(*(m.preComputedTable_[i - k]));
 		}
 	}
-	//DEBUG("mod) last add z = {}", toString());
-	r->add(*this);
-	//DEBUG("mod) r = {}", r->toString());
+	r.add(*this);
 
-	while (r->cmp(m) == 1) {
-		r->sub(m);
-		//DEBUG("mod) sub r = {}", r->toString());
+	while (r.cmp(m) == 1) {
+		DEBUG("r = {}", r.toString());
+		DEBUG("m = {}", m.toString());
+		r.sub(m);
 	}
-	return r;
+	copyContent(r);
 }
 

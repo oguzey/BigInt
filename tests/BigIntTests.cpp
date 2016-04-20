@@ -329,52 +329,43 @@ void testIsEqual()
 
 void testMontgomeryMultiplication()
 {
-	BigInt x, y, m, check;
-	BigInt *res = NULL;
+	BigInt x, y, m, check, ret;
 
 	x.setNumber(3);
 	y.setNumber(5);
 	m.setNumber(17);
 	m.initModularReduction();
-	res = x.mulMont(y, m);
+	x.mulMont(y, m, ret);
 	m.shutDownModularReduction();
-	assertMsg(res != NULL, "Fail during montMull calculation.");
 	check.setNumber(15);
-	assertMsg(res->isEqual(check), "Fail mont mul.");
-	LOG("Res should be equal to 15. Real is {}", res->toString());
-
-	delete res;
+	assertMsg(ret.isEqual(check), "Fail mont mul.");
+	LOG("Res should be equal to 15. Real is {}", ret.toString());
 
 	x.fromString("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 		     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-		     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-		     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+		     "aaaaaaaaaaaaaaaaaaaaaaa");
 	y.fromString("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaFFFFFFFFFF"
 		     "Ffffffffffffffffffffffffffffffff1231723617231218238899798797a979a8a9"
-		     "7a97a987aa78a798797979798cd8c7d87cd987c8d7c9d7c97d9c7d9cdcdcaaaaaaaa"
-		     "aaaaaaaa82134712385732847083576378923674234");
+		     "7a97a987aa78a798797979");
 	m.fromString("bbbbbbbbbddbbcbdbdbcdcbdbcdbcbbdfffffff1231723617231218238899798797a"
 		     "979a8a97a97a987aa78a798797979798cd8c7d87cd987c8d7c9d7c97d9c7d8748236"
 		     "4827368476238468273648273648263641041209809423942091");
 
-	y.setNumber(1);
+//	y.setNumber(1);
 
-	x.fromString("4cd");
-	y.fromString("16a0");
-	m.fromString("11bbf");
+//	x.fromString("4cd");
+//	y.fromString("16a0");
+//	m.fromString("11bbf");
 
 	m.initModularReduction();
-	res = x.mulMont(y, m);
+	x.mulMont(y, m, ret);
 	m.shutDownModularReduction();
-	assertMsg(res != NULL, "Fail during montMull calculation 2.");
 	check.setNumber(0x11AC1);
-	assertMsg(res->isEqual(check), "Fail mont mul.");
+	assertMsg(ret.isEqual(check), "Fail mont mul.");
 	LOG("x = {}", x.toString());
 	LOG("y = {}", y.toString());
 	LOG("m = {}", m.toString());
-	LOG("Should be 11AC1 but real is {}", res->toString());
-
-	delete res;
+	LOG("Should be 11AC1 but real is {}", ret.toString());
 }
 
 void testGetPosMostSignificatnBit()
@@ -409,36 +400,29 @@ void testMultiplicationByBit()
 	assertMsg(a.isZero(), "Fail during mul by zero.");
 }
 
-void testReductionModule()
+void testModularReduction()
 {
 	BigInt check;
-	BigInt *res = NULL;
-	BigInt *a = BigInt::getDoubleNumber();
-	a->fromString("f7b15cdf");
-
+	BigInt a("f7b15cdf");
 	BigInt m("11bbf");
 
 	m.initModularReduction();
 
-	res = a->mod(m);
+	a.mod(m);
 	check.fromString("FA57");
-	assertMsg(check.isEqual(*res), "Mod fail.");
+	assertMsg(a.isEqual(check), "Mod fail.");
 
-	delete res;
-
-	a->fromString("34fd");
-	res = a->mod(m);
+	a.fromString("34fd");
+	a.mod(m);
 	check.fromString("34FD");
-	assertMsg(check.isEqual(*res), "Mod fail 2.");
+	assertMsg(a.isEqual(check), "Mod fail 2.");
 
-	a->fromString("134fd");
-	res = a->mod(m);
+	a.fromString("134fd");
+	a.mod(m);
 	check.fromString("193E");
-	assertMsg(check.isEqual(*res), "Mod fail 3.");
+	assertMsg(a.isEqual(check), "Mod fail 3.");
 
 	m.shutDownModularReduction();
-
-	delete a;
 }
 
 void testCopy()
@@ -490,7 +474,7 @@ int main(int argc, char *argv[])
 	runTest(testGetPosMostSignificatnBit);
 	runTest(testMontgomeryMultiplication);
 	runTest(testMultiplicationByBit);
-	runTest(testReductionModule);
+	runTest(testModularReduction);
 	runTest(testCopy);
 
 	mesureTimeRunning(mulBitByOne);
