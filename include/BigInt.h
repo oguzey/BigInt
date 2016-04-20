@@ -29,12 +29,12 @@ public:
 	BigInt* mul(const BigInt &number, BigInt **result);
 	void mulByBit(int bitValue);
 	bool div(const BigInt &N, const BigInt &D, BigInt *Q, BigInt *R);
-	BigInt* montMul(const BigInt &y, const BigInt &m);
+	BigInt* mulMont(const BigInt &y, const BigInt &m);
 	BigInt* mod(const BigInt &m);
 
 	///
 	///  1 if this > number
-	/// -1 if number > this
+	/// -1 if this < number
 	///  0 if this == number
 	///
 	int cmp(const BigInt &number) const;
@@ -49,14 +49,27 @@ public:
 	int getBit(unsigned int position) const;
 	int clearBit(unsigned int position);
 	BigInt* copy() const;
+	void copyContent(const BigInt &number);
 	int isEqual(const BigInt &number);
 	void setMax();
 	void setZero();
 	void setNumber(unsigned int number);
 	bool isZero() const;
 	int getPosMostSignificatnBit() const;
-	void initMontMul();
-	void shutDownMontMul();
+	///
+	/// Create pre-compilation table for modular reduction.
+	/// Should be called for module m.
+	/// Need for methods modular reduction `mod` and Montgomery
+	/// multiplication `mulMont`.
+	///
+	void initModularReduction();
+	///
+	/// Destroy pre-compilation table for modular reduction.
+	/// Should be called for module m.
+	/// Need for methods modular reduction `mod` and Montgomery
+	/// multiplication `mulMont`.
+	///
+	void shutDownModularReduction();
 
 private:
 	block *blocks_;
@@ -66,11 +79,9 @@ private:
 	const block maxValueLastBlock_;
 
 	///
-	/// Using for Montgomery multiplication.
-	/// You should run initMontMul for module m before start multiplication
-	/// operation. After that you should run shutDownMontMul.
+	/// Using only for Montgomery multiplication and modular reduction.
 	///
-	BigInt **preComputedTable;
+	BigInt **preComputedTable_;
 
 	BigInt(unsigned int lengthBits);
 	int hexCharToInteger(char digit);

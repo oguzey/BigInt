@@ -329,16 +329,19 @@ void testIsEqual()
 
 void testMontgomeryMultiplication()
 {
-	BigInt x, y, m;
+	BigInt x, y, m, check;
 	BigInt *res = NULL;
+
 	x.setNumber(3);
 	y.setNumber(5);
 	m.setNumber(17);
-	m.initMontMul();
-	res = x.montMul(y, m);
-	m.shutDownMontMul();
+	m.initModularReduction();
+	res = x.mulMont(y, m);
+	m.shutDownModularReduction();
 	assertMsg(res != NULL, "Fail during montMull calculation.");
-	LOG("res = {}", res->toString());
+	check.setNumber(15);
+	assertMsg(res->isEqual(check), "Fail mont mul.");
+	LOG("Res should be equal to 15. Real is {}", res->toString());
 
 	delete res;
 
@@ -360,15 +363,16 @@ void testMontgomeryMultiplication()
 	y.fromString("16a0");
 	m.fromString("11bbf");
 
-	m.initMontMul();
-	res = x.montMul(y, m);
-	m.shutDownMontMul();
+	m.initModularReduction();
+	res = x.mulMont(y, m);
+	m.shutDownModularReduction();
 	assertMsg(res != NULL, "Fail during montMull calculation 2.");
-
-//	LOG("x = {}", x.toString());
-//	LOG("y = {}", y.toString());
-//	LOG("m = {}", m.toString());
-//	LOG("res2 = {}", res->toString());
+	check.setNumber(0x11AC1);
+	assertMsg(res->isEqual(check), "Fail mont mul.");
+	LOG("x = {}", x.toString());
+	LOG("y = {}", y.toString());
+	LOG("m = {}", m.toString());
+	LOG("Should be 11AC1 but real is {}", res->toString());
 
 	delete res;
 }
@@ -414,7 +418,7 @@ void testReductionModule()
 
 	BigInt m("11bbf");
 
-	m.initMontMul();
+	m.initModularReduction();
 
 	res = a->mod(m);
 	check.fromString("FA57");
@@ -432,9 +436,22 @@ void testReductionModule()
 	check.fromString("193E");
 	assertMsg(check.isEqual(*res), "Mod fail 3.");
 
-	m.shutDownMontMul();
+	m.shutDownModularReduction();
 
 	delete a;
+}
+
+void testCopy()
+{
+	BigInt a, b;
+
+	a.setBit(354, 1);
+	b.copyContent(a);
+	assertEqualMsg(1, b.getBit(354), "Fail during copy content");
+
+	a.setMax();
+	b.copyContent(a);
+	assertMsg(b.isEqual(a), "Fail copy content.");
 }
 
 
@@ -460,23 +477,24 @@ int main(int argc, char *argv[])
 {
 	LOG("Start tests of BigInt implementation...");
 
-//	runTest(testIsEqual);
-//	runTest(testConvertToFromString);
-//	runTest(testSetValues);
-//	runTest(testAddition);
-//	runTest(testSubtraction);
-//	runTest(testMultiplication);
-//	runTest(testShiftLeft);
-//	runTest(testShiftRight);
-//	runTest(testCmp);
+	runTest(testIsEqual);
+	runTest(testConvertToFromString);
+	runTest(testSetValues);
+	runTest(testAddition);
+	runTest(testSubtraction);
+	runTest(testMultiplication);
+	runTest(testShiftLeft);
+	runTest(testShiftRight);
+	runTest(testCmp);
 	runTest(testBits);
 	runTest(testGetPosMostSignificatnBit);
 	runTest(testMontgomeryMultiplication);
 	runTest(testMultiplicationByBit);
 	runTest(testReductionModule);
+	runTest(testCopy);
 
-	//mesureTimeRunning(mulBitByOne);
-	//mesureTimeRunning(mulBitByZero);
+	mesureTimeRunning(mulBitByOne);
+	mesureTimeRunning(mulBitByZero);
 
 
 	LOG("End tests.");

@@ -43,7 +43,7 @@ BigInt::BigInt(unsigned int lengthBits):
 
 	blocks_ = new block[size_];
 	memset(blocks_, 0, sizeof(block) * size_);
-	preComputedTable = NULL;
+	preComputedTable_ = NULL;
 }
 
 BigInt::BigInt() : BigInt(BIGINT_BITS)
@@ -497,32 +497,49 @@ BigInt* BigInt::copy() const
 	return number;
 }
 
+void BigInt::copyContent(const BigInt &number)
+{
+	block *thisData = blocks_;
+	block *thisEnd = blocks_ + size_;
+
+	block *mData = number.blocks_;
+	block *mEnd = number.blocks_ + number.size_;
+
+
+	while (thisData != thisEnd && mData != mEnd) {
+		*thisData++ = *mData++;
+	}
+	blocks_[size_ - 1] &= maxValueLastBlock_;
+}
+
 bool BigInt::add(const BigInt &number)
 {
-	assert(size_ == number.size_);
+	assert(size_ >= number.size_);
 
 	block carry = 0;
 	unsigned int i = 0;
 
-	for(i = 0 ; i < size_ - 1; ++i) {
-		//DEBUG("one {:x} + {:x}", blocks_[i], number.blocks_[i]);
-		blocks_[i] = blocks_[i] + number.blocks_[i] + carry;
+	for(i = 0 ; i < number.size_; ++i) {
+		blocks_[i] += number.blocks_[i] + carry;
 		carry = blocks_[i] >> BLOCK_BITS;
 		blocks_[i] &= BLOCK_MAX_NUMBER;
-		//DEBUG("carry = {:x}", carry);
 		assert((carry & 1) == carry);
 	}
 
-	assert(size_ - 1 == i);
-
-	blocks_[i] = blocks_[i] + number.blocks_[i] + carry;
-	if (blocks_[i] > maxValueLastBlock_) {
-		DEBUG("carry = {:x}", carry);
-		carry = 1;
-		assert(1 == 0);
+	if (size_ == number.size_) {
+		carry = blocks_[number.size_ - 1] >> maxValueLastBlock_;
+		blocks_[number.size_ - 1] &= maxValueLastBlock_;
+	} else {
+		for (i = number.size_; i < size_ - 1; ++i) {
+			blocks_[i] += carry;
+			carry = blocks_[i] >> BLOCK_BITS;
+			blocks_[i] &= BLOCK_MAX_NUMBER;
+			assert((carry & 1) == carry);
+		}
+		carry = blocks_[size_ - 1] >> maxValueLastBlock_;
+		blocks_[size_ - 1] &= maxValueLastBlock_;
 	}
-	carry = blocks_[i] >> countBistLastBlock_;
-	blocks_[i] &= maxValueLastBlock_;
+	assert((carry & 1) == carry);
 	return carry;
 }
 
@@ -626,11 +643,11 @@ bool BigInt::div(const BigInt &N, const BigInt &D, BigInt *Q, BigInt *R)
 	return true;
 }
 
-BigInt* BigInt::montMul(const BigInt &y, const BigInt &m)
+BigInt* BigInt::mulMont(const BigInt &y, const BigInt &m)
 {
 	assert(length_ == y.length_);
 	assert(length_ == m.length_);
-	assert(m.preComputedTable);
+	assert(m.preComputedTable_);
 
 	assert(cmp(m) == -1);
 	assert(y.cmp(m) == -1);
@@ -641,7 +658,7 @@ BigInt* BigInt::montMul(const BigInt &y, const BigInt &m)
 	assert(m.getBit(0) == 1);
 
 	// this - x
-	BigInt *A = new BigInt();
+	BigInt *A = new BigInt(BIGINT_DOUBLE_BITS);
 
 	bool overflow = false;
 	unsigned int u = 0;
@@ -654,7 +671,7 @@ BigInt* BigInt::montMul(const BigInt &y, const BigInt &m)
 
 	DEBUG("max len is {}", len);
 
-	for (i = 0; i < length_; ++i) {
+	for (i = 0; i < len; ++i) {
 		overflow = false;
 
 		xi = this->getBit(i);
@@ -692,66 +709,60 @@ BigInt* BigInt::montMul(const BigInt &y, const BigInt &m)
 		A->sub(m);
 		//DEBUG("SUB");
 	}
-	return A;
+	DEBUG("temp {}", A->toString());
+	A->shiftLeft(len);
+	return A->mod(m);
 }
 
-///
-/// \brief BigInt::initMontMul		Init of montgomery multiplication.
-///					Should be called for number module m.
-///
-void BigInt::initMontMul()
+void BigInt::initModularReduction()
 {
 	assert(isZero() == false);
-	assert(preComputedTable == NULL);
+	assert(preComputedTable_ == NULL);
 
 	int mostSignBit = getPosMostSignificatnBit();
-	preComputedTable = new BigInt*[mostSignBit];
+	preComputedTable_ = new BigInt*[mostSignBit];
 	int i;
 
-	preComputedTable[0] = new BigInt(BIGINT_DOUBLE_BITS);
-	preComputedTable[0]->setNumber(1);
-	preComputedTable[0]->shiftLeft(mostSignBit);
+	preComputedTable_[0] = new BigInt(BIGINT_DOUBLE_BITS);
+	preComputedTable_[0]->setNumber(1);
+	preComputedTable_[0]->shiftLeft(mostSignBit);
 	//DEBUG("most sign bit {}", mostSignBit);
 	//DEBUG("init shift table[{}] = {}", 0, preComputedTable[0]->toString());
-	while(preComputedTable[0]->cmp(*this) == 1) {
-		preComputedTable[0]->sub(*this);
+	while(preComputedTable_[0]->cmp(*this) == 1) {
+		preComputedTable_[0]->sub(*this);
 	}
 	//DEBUG("init table[{}] = {}", 0, table[0]->toString());
 
 	for (i = 1; i < mostSignBit; ++i) {
-		preComputedTable[i] = preComputedTable[i - 1]->copy();
-		preComputedTable[i]->shiftLeft(1);
-		while(preComputedTable[i]->cmp(*this) == 1) {
-			preComputedTable[i]->sub(*this);
+		preComputedTable_[i] = preComputedTable_[i - 1]->copy();
+		preComputedTable_[i]->shiftLeft(1);
+		while(preComputedTable_[i]->cmp(*this) == 1) {
+			preComputedTable_[i]->sub(*this);
 		}
 		//DEBUG("init table[{}] = {}", i, table[i]->toString());
 	}
 	INFO("Init of montgomery multiplication done.");
 }
 
-///
-/// \brief BigInt::shutDownMontMul	Shut down of montgomery multiplication.
-///					Should be called for number module m.
-///
-void BigInt::shutDownMontMul()
+void BigInt::shutDownModularReduction()
 {
-	assert(preComputedTable);
+	assert(preComputedTable_);
 
 	int mostSignBit = getPosMostSignificatnBit();
 
 	int i;
 	for (i = 0; i < mostSignBit; ++i) {
 		//DEBUG("shutdown table[{}] = {}", i, table[i]->toString());
-		delete preComputedTable[i];
+		delete preComputedTable_[i];
 	}
-	delete[] preComputedTable;
-	preComputedTable = NULL;
+	delete[] preComputedTable_;
+	preComputedTable_ = NULL;
 	INFO("Shut down of montgomery multiplication done.");
 }
 
 BigInt* BigInt::mod(const BigInt &m)
 {
-	assert(m.preComputedTable);
+	assert(m.preComputedTable_);
 
 	BigInt *r = NULL;
 	int k = m.getPosMostSignificatnBit();
@@ -772,7 +783,7 @@ BigInt* BigInt::mod(const BigInt &m)
 		//DEBUG("mod) get bit {}", i);
 		if (clearBit(i)) {
 			//DEBUG("mod) add number {}", i - k);
-			r->add(*(m.preComputedTable[i - k]));
+			r->add(*(m.preComputedTable_[i - k]));
 		}
 	}
 	//DEBUG("mod) last add z = {}", toString());
