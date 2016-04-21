@@ -790,3 +790,57 @@ void BigInt::mod(const BigInt &m)
 	copyContent(r);
 }
 
+void BigInt::splitToRWords(std::vector<block> &rWords, int lenBits)
+{
+	assert(lenBits > 0 && lenBits <= WORD_BITS);
+	int len = length_ / WORD_BITS;
+	int maxValue = fillBits(lenBits);
+	std::vector<block> rawArray(len);
+	blocksToRawArray(rawArray);
+
+	int bitValue;
+	int posBlock;
+	int rWord = 0;
+	int rWordBitPos = lenBits - 1;
+	int leftBits;
+
+	for (posBlock = len - 1; posBlock >= 0; --posBlock) {
+		for (leftBits = WORD_BITS - 1; leftBits >= 0; --leftBits) {
+			bitValue = (rawArray[posBlock] >> leftBits) & 1;
+			//DEBUG("before rWord = {}", rWord);
+			// set bit to rWord
+			rWord ^= (-bitValue ^ rWord) & (1 << rWordBitPos);
+			//DEBUG("after rWord = {}", rWord);
+			if (rWordBitPos != 0) {
+				// move to other bit position
+				--rWordBitPos;
+			} else {
+				// push rWord to vector and clear data
+				rWordBitPos = lenBits - 1;
+				//DEBUG("rWord = {}, but possible max is {}", rWord, maxValue);
+				assert(rWord <= maxValue);
+				rWords.push_back(rWord);
+				rWord = 0;
+			}
+		}
+	}
+	if (rWordBitPos != lenBits - 1) {
+		rWord >>= rWordBitPos + 1;
+		//DEBUG("last shift to rWordBitPos = {} , rWord = {}", rWordBitPos + 1, rWord);
+		rWords.push_back(rWord);
+	}
+	std::reverse(rWords.begin(), rWords.end());
+}
+
+void BigInt::exp(const BigInt &e, const BigInt &m)
+{
+	BigInt a;
+	a.setZero();
+
+	std::vector<block> rWords;
+	a.splitToRWords(rWords, 5);
+	unsigned int i;
+	for (i = 0; i < rWords.size(); ++i) {
+		DEBUG("rWords[{}] = {}",i, rWords[i]);
+	}
+}

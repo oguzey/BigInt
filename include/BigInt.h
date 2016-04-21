@@ -31,6 +31,7 @@ public:
 	bool div(const BigInt &N, const BigInt &D, BigInt *Q, BigInt *R);
 	void mulMont(const BigInt &y, const BigInt &m, BigInt &ret);
 	void mod(const BigInt &m);
+	void exp(const BigInt &e, const BigInt &m);
 
 	///
 	///  1 if this > number
@@ -89,5 +90,6 @@ private:
 	void blocksToRawArray(std::vector<block> &rawArray) const;
 	char integerToHexChar(int symbol) const;
 	block fillBits(unsigned int amountBits);
+	void splitToRWords(std::vector<block> &rWords, int lenBits);
 };
 

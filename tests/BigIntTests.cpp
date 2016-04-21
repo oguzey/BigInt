@@ -444,6 +444,13 @@ void testCopy()
 	assertMsg(b.isEqual(a), "Fail copy content.");
 }
 
+void testExp()
+{
+	BigInt a, b, c;
+
+	a.exp(b, c);
+}
+
 
 void mulBitByOne()
 {
@@ -482,6 +489,7 @@ int main(int argc, char *argv[])
 	runTest(testMultiplicationByBit);
 	runTest(testModularReduction);
 	runTest(testCopy);
+	runTest(testExp);
 
 	mesureTimeRunning(mulBitByOne);
 	mesureTimeRunning(mulBitByZero);
