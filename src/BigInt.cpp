@@ -44,6 +44,7 @@ BigInt::BigInt(unsigned int lengthBits):
 	blocks_ = new block[size_];
 	memset(blocks_, 0, sizeof(block) * size_);
 	preComputedTable_ = NULL;
+	posMostSignBit_ = -1;
 }
 
 BigInt::BigInt() : BigInt(BIGINT_BITS)
@@ -638,7 +639,7 @@ bool BigInt::div(const BigInt &N, const BigInt &D, BigInt *Q, BigInt *R)
 	return true;
 }
 
-void BigInt::mulMont(const BigInt &y, const BigInt &m, BigInt &ret)
+void BigInt::mulMont(const BigInt &y, const BigInt &m, BigInt &ret) const
 {
 	assert(length_ == y.length_);
 	assert(length_ == m.length_);
@@ -664,7 +665,7 @@ void BigInt::mulMont(const BigInt &y, const BigInt &m, BigInt &ret)
 	// fing max len of numbers
 	unsigned int len = m.getPosMostSignificatnBit();
 
-	DEBUG("max len is {}", len);
+	//DEBUG("max len is {}", len);
 
 	for (i = 0; i < len; ++i) {
 		overflow = false;
@@ -704,9 +705,9 @@ void BigInt::mulMont(const BigInt &y, const BigInt &m, BigInt &ret)
 		result.sub(m);
 		//DEBUG("SUB");
 	}
-	DEBUG("temp {} mostSigBit = {}", result.toString(), result.getPosMostSignificatnBit());
+	//DEBUG("temp {} mostSigBit = {}", result.toString(), result.getPosMostSignificatnBit());
 	result.shiftLeft(len);
-	DEBUG("temp shift {},  mostSigBit = {}", result.toString(), result.getPosMostSignificatnBit());
+	//DEBUG("temp shift {},  mostSigBit = {}", result.toString(), result.getPosMostSignificatnBit());
 	result.mod(m);
 
 	assert(result.getPosMostSignificatnBit() <= BIGINT_BITS);
@@ -716,15 +717,15 @@ void BigInt::mulMont(const BigInt &y, const BigInt &m, BigInt &ret)
 void BigInt::initModularReduction()
 {
 	assert(isZero() == false);
-	assert(preComputedTable_ == NULL);
+	assert(preComputedTable_ == NULL && posMostSignBit_ == -1);
 
-	int mostSignBit = getPosMostSignificatnBit();
-	preComputedTable_ = new BigInt*[mostSignBit + 1];
+	posMostSignBit_ = getPosMostSignificatnBit();
+	preComputedTable_ = new BigInt*[posMostSignBit_ + 1];
 	int i;
 
 	preComputedTable_[0] = new BigInt(BIGINT_DOUBLE_BITS);
 	preComputedTable_[0]->setNumber(1);
-	preComputedTable_[0]->shiftLeft(mostSignBit);
+	preComputedTable_[0]->shiftLeft(posMostSignBit_);
 	//DEBUG("most sign bit {}", mostSignBit);
 	//DEBUG("init shift table[{}] = {}", 0, preComputedTable[0]->toString());
 	while(preComputedTable_[0]->cmp(*this) == 1) {
@@ -732,7 +733,7 @@ void BigInt::initModularReduction()
 	}
 	//DEBUG("init table[{}] = {}", 0, table[0]->toString());
 
-	for (i = 1; i <= mostSignBit; ++i) {
+	for (i = 1; i <= posMostSignBit_; ++i) {
 		preComputedTable_[i] = preComputedTable_[i - 1]->copy();
 		preComputedTable_[i]->shiftLeft(1);
 		while(preComputedTable_[i]->cmp(*this) == 1) {
@@ -745,17 +746,15 @@ void BigInt::initModularReduction()
 
 void BigInt::shutDownModularReduction()
 {
-	assert(preComputedTable_);
-
-	int mostSignBit = getPosMostSignificatnBit();
-
+	assert(preComputedTable_ && posMostSignBit_ > -1);
 	int i;
-	for (i = 0; i <= mostSignBit; ++i) {
+	for (i = 0; i <= posMostSignBit_; ++i) {
 		//DEBUG("shutdown table[{}] = {}", i, table[i]->toString());
 		delete preComputedTable_[i];
 	}
 	delete[] preComputedTable_;
 	preComputedTable_ = NULL;
+	posMostSignBit_ = -1;
 	INFO("Shut down of montgomery multiplication done.");
 }
 
@@ -790,7 +789,7 @@ void BigInt::mod(const BigInt &m)
 	copyContent(r);
 }
 
-void BigInt::splitToRWords(std::vector<block> &rWords, int lenBits)
+void BigInt::splitToRWords(std::vector<block> &rWords, int lenBits) const
 {
 	assert(lenBits > 0 && lenBits <= WORD_BITS);
 	int len = length_ / WORD_BITS;
@@ -832,15 +831,41 @@ void BigInt::splitToRWords(std::vector<block> &rWords, int lenBits)
 	std::reverse(rWords.begin(), rWords.end());
 }
 
-void BigInt::exp(const BigInt &e, const BigInt &m)
+void BigInt::exp(const BigInt &e, const BigInt &m, BigInt &ret)
 {
-	BigInt a;
-	a.setZero();
-
+	BigInt C;
 	std::vector<block> rWords;
-	a.splitToRWords(rWords, 5);
 	unsigned int i;
-	for (i = 0; i < rWords.size(); ++i) {
-		DEBUG("rWords[{}] = {}",i, rWords[i]);
+	///
+	/// k = 5 => m = b = 2^k = 32
+	///
+	const unsigned int k = 32;
+	BigInt precompValues[k];
+
+	/* check x less that mod */
+	this->mod(m);
+
+	precompValues[0].setNumber(1);
+	precompValues[1].copyContent(*this);
+
+	for (i = 2; i < k; ++i) {
+		this->mulMont(precompValues[i - 1], m, precompValues[i]);
 	}
+
+	e.splitToRWords(rWords, 5);
+
+	C.copyContent(precompValues[rWords[0]]);
+
+	for (i = 1; i < rWords.size(); ++i) {
+		//DEBUG("rWords[{}] = {:X}",i, rWords[i]);
+		C.mulMont(C, m, C);
+		C.mulMont(C, m, C);
+		C.mulMont(C, m, C);
+		C.mulMont(C, m, C);
+		C.mulMont(C, m, C);
+		if (rWords[i]) {
+			C.mulMont(precompValues[rWords[i]], m, C);
+		}
+	}
+	ret.copyContent(C);
 }

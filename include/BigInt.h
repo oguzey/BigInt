@@ -29,9 +29,9 @@ public:
 	BigInt* mul(const BigInt &number, BigInt **result);
 	void mulByBit(int bitValue);
 	bool div(const BigInt &N, const BigInt &D, BigInt *Q, BigInt *R);
-	void mulMont(const BigInt &y, const BigInt &m, BigInt &ret);
+	void mulMont(const BigInt &y, const BigInt &m, BigInt &ret) const;
 	void mod(const BigInt &m);
-	void exp(const BigInt &e, const BigInt &m);
+	void exp(const BigInt &e, const BigInt &m, BigInt &ret);
 
 	///
 	///  1 if this > number
@@ -83,13 +83,14 @@ private:
 	/// Using only for Montgomery multiplication and modular reduction.
 	///
 	BigInt **preComputedTable_;
+	int posMostSignBit_;
 
 	BigInt(unsigned int lengthBits);
 	int hexCharToInteger(char digit);
 	void rawArrayToBlocks(std::vector<block> &rawArray);
 	void blocksToRawArray(std::vector<block> &rawArray) const;
 	char integerToHexChar(int symbol) const;
-	block fillBits(unsigned int amountBits);
-	void splitToRWords(std::vector<block> &rWords, int lenBits);
+	void splitToRWords(std::vector<block> &rWords, int lenBits) const;
+	static block fillBits(unsigned int amountBits);
 };
 

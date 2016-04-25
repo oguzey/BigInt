@@ -446,9 +446,27 @@ void testCopy()
 
 void testExp()
 {
-	BigInt a, b, c;
+	BigInt a, e, m, ret;
+	m.fromString("DE5BF25EFA23FE78BD634DFB6AFD49AEDFF7CF41CE4390F49E6D1408BC"
+		     "95A48FF1FFC7F91F45E220484F04D840BF00A75E5AC8B0BE5EA946AC52"
+		     "77863B34129B0AEE65548967413C777B691156E3CE5020DE44BF3B526E"
+		     "5AF879561E4717E6518889363D84A33BE1B87C786089DEB514ED9ADAB3"
+		     "45B819D22DDA9E4E004C772D");
+	e.copyContent(m);
+	a.setNumber(1);
+	e.sub(a);  // e = m - 1
 
-	a.exp(b, c);
+	a.fromString("AAAAAFF");
+
+	m.initModularReduction();
+
+	a.exp(e, m, ret);
+
+	LOG("a = {}", a.toString());
+	LOG("e = {}", e.toString());
+	LOG("m = {}", m.toString());
+	LOG("ret = {}", ret.toString());
+	m.shutDownModularReduction();
 }
 
 
@@ -493,6 +511,7 @@ int main(int argc, char *argv[])
 
 	mesureTimeRunning(mulBitByOne);
 	mesureTimeRunning(mulBitByZero);
+	mesureTimeRunning(testExp);
 
 
 	LOG("End tests.");
