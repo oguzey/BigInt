@@ -26,7 +26,6 @@ public:
 	unsigned int getLength();
 	bool add(const BigInt &number);
 	void sub(const BigInt &number);
-	BigInt* mul(const BigInt &number, BigInt **result);
 	void mulByBit(int bitValue);
 	bool div(const BigInt &N, const BigInt &D, BigInt *Q, BigInt *R);
 	void mulMont(const BigInt &y, const BigInt &m, BigInt &ret) const;

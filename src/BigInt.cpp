@@ -573,38 +573,6 @@ void BigInt::sub(const BigInt &number)
 	}
 }
 
-BigInt* BigInt::mul(const BigInt &number, BigInt **result)
-{
-	uint64_t temp_res = 0;
-	block c = 0;
-	BigInt *res = NULL;
-	if (result) {
-		if (*result) {
-			res = *result;
-			assert(res->length_ == BIGINT_DOUBLE_BITS);
-			res->setZero();
-		} else {
-			res = *result = new BigInt(BIGINT_DOUBLE_BITS);
-		}
-	} else {
-		res = new BigInt(BIGINT_DOUBLE_BITS);
-	}
-
-	assert(res != NULL);
-	assert(res->length_ == BIGINT_DOUBLE_BITS);
-
-	for(unsigned int i = 0; i < size_; ++i) {
-		c = 0;
-		for (unsigned int j = 0; j < number.size_; ++j) {
-			temp_res = res->blocks_[i + j] + blocks_[i] * number.blocks_[j] + c;
-			res->blocks_[i + j] = temp_res & BLOCK_MAX_NUMBER;
-			c = (temp_res >> BLOCK_BITS) & BLOCK_MAX_NUMBER;
-		}
-		res->blocks_[i + number.size_] = c;
-	}
-	return res;
-}
-
 void BigInt::mulByBit(int bitValue)
 {
 	assert((bitValue & 1) == bitValue);
@@ -663,26 +631,34 @@ void BigInt::mulMont(const BigInt &y, const BigInt &m, BigInt &ret) const
 	unsigned int i;
 
 	// fing max len of numbers
-	unsigned int len = m.getPosMostSignificatnBit();
+	unsigned int len = m.posMostSignBit_;
 
 	//DEBUG("max len is {}", len);
 
-	for (i = 0; i < len; ++i) {
+	for (i = 0; i <= len; ++i) {
 		overflow = false;
 
 		xi = this->getBit(i);
 		assert((xi & 1) == xi);
 		assert((result.getBit(0) & 1) == result.getBit(0));
-		//DEBUG("{})xi = {:x}", i, xi);
+//		LOG("i = {}", i);
+//		LOG("x{} = {}",i, xi);
 		u = (result.getBit(0) + xi * y0) % 2;
 		assert((u & 1) == u);
+		//LOG("u{} = {}",i, u);
 
 		if (xi) {
+			//DEBUG("result {}  + ", result.toString());
+			//DEBUG("y {}  + ", y.toString());
 			overflow = result.add(y);
+			//DEBUG(" = result {}", result.toString());
 			//DEBUG("Overflow A + y = {}", overflow);
 		}
 		if (u) {
+			//DEBUG("result {}  + ", result.toString());
+			//DEBUG("m {}  + ", m.toString());
 			bool overflow2 = result.add(m);
+			//DEBUG(" = result {}", result.toString());
 			//DEBUG("Overflow A + m = {}", overflow2);
 			if (overflow) {
 				if (overflow2) {
@@ -696,19 +672,20 @@ void BigInt::mulMont(const BigInt &y, const BigInt &m, BigInt &ret) const
 		assert(result.getBit(0) == 0);
 		result.shiftRightBlock(1);
 		if (overflow) {
-			//DEBUG("Set overflowed bit");
+			DEBUG("Set overflowed bit");
 			result.setBit(length_ - 1, 1);
 		}
-		//DEBUG("temp {}", A->toString());
+		//DEBUG("result after shift {}", result.toString());
 	}
 	if (result.cmp(m) == 1) {
 		result.sub(m);
 		//DEBUG("SUB");
 	}
 	//DEBUG("temp {} mostSigBit = {}", result.toString(), result.getPosMostSignificatnBit());
-	result.shiftLeft(len);
+	result.shiftLeft(len + 1);
 	//DEBUG("temp shift {},  mostSigBit = {}", result.toString(), result.getPosMostSignificatnBit());
 	result.mod(m);
+	//DEBUG("result {},  mostSigBit = {}", result.toString(), result.getPosMostSignificatnBit());
 
 	assert(result.getPosMostSignificatnBit() <= BIGINT_BITS);
 	ret.copyContent(result);
@@ -720,9 +697,10 @@ void BigInt::initModularReduction()
 	assert(preComputedTable_ == NULL && posMostSignBit_ == -1);
 
 	posMostSignBit_ = getPosMostSignificatnBit();
-	preComputedTable_ = new BigInt*[posMostSignBit_ + 1];
+	const int len = posMostSignBit_ + 2;
+	preComputedTable_ = new BigInt*[len];
 	int i;
-
+	DEBUG("length of table {}", len);
 	preComputedTable_[0] = new BigInt(BIGINT_DOUBLE_BITS);
 	preComputedTable_[0]->setNumber(1);
 	preComputedTable_[0]->shiftLeft(posMostSignBit_);
@@ -733,7 +711,7 @@ void BigInt::initModularReduction()
 	}
 	//DEBUG("init table[{}] = {}", 0, table[0]->toString());
 
-	for (i = 1; i <= posMostSignBit_; ++i) {
+	for (i = 1; i < len; ++i) {
 		preComputedTable_[i] = preComputedTable_[i - 1]->copy();
 		preComputedTable_[i]->shiftLeft(1);
 		while(preComputedTable_[i]->cmp(*this) == 1) {
@@ -747,8 +725,9 @@ void BigInt::initModularReduction()
 void BigInt::shutDownModularReduction()
 {
 	assert(preComputedTable_ && posMostSignBit_ > -1);
+	const int len = posMostSignBit_ + 2;
 	int i;
-	for (i = 0; i <= posMostSignBit_; ++i) {
+	for (i = 0; i < len; ++i) {
 		//DEBUG("shutdown table[{}] = {}", i, table[i]->toString());
 		delete preComputedTable_[i];
 	}
@@ -761,12 +740,14 @@ void BigInt::shutDownModularReduction()
 void BigInt::mod(const BigInt &m)
 {
 	assert(m.preComputedTable_);
+	assert(m.posMostSignBit_ != -1);
 
 	BigInt r(BIGINT_DOUBLE_BITS);
-	int k = m.getPosMostSignificatnBit();
+	const int k = m.posMostSignBit_;
 	int posMostSignBitZ = getPosMostSignificatnBit();
 
-	assert(posMostSignBitZ <= 2 * k);
+	//DEBUG("pos most sign bit Z = {}", posMostSignBitZ);
+	assert(posMostSignBitZ - k <= k + 1);
 
 	if (cmp(m) == -1) {
 		return;
@@ -776,6 +757,7 @@ void BigInt::mod(const BigInt &m)
 		return;
 	}
 	int i;
+	//DEBUG("dif = {}", posMostSignBitZ - k);
 	for (i = posMostSignBitZ; i >= k; --i) {
 		if (clearBit(i)) {
 			r.add(*(m.preComputedTable_[i - k]));
@@ -800,7 +782,7 @@ void BigInt::splitToRWords(std::vector<block> &rWords, int lenBits) const
 	int bitValue;
 	int posBlock;
 	int rWord = 0;
-	int rWordBitPos = lenBits - 1;
+	int rWordBitPos = (length_ % lenBits) - 1;
 	int leftBits;
 
 	for (posBlock = len - 1; posBlock >= 0; --posBlock) {
@@ -835,15 +817,19 @@ void BigInt::exp(const BigInt &e, const BigInt &m, BigInt &ret)
 {
 	BigInt C;
 	std::vector<block> rWords;
-	unsigned int i;
+	int i;
+	int size;
 	///
 	/// k = 5 => m = b = 2^k = 32
 	///
-	const unsigned int k = 32;
+	const int k = 32;
 	BigInt precompValues[k];
 
 	/* check x less that mod */
+//	DEBUG("this = {}", toString());
+//	DEBUG("m = {}", m.toString());
 	this->mod(m);
+	//DEBUG("this = {}", toString());
 
 	precompValues[0].setNumber(1);
 	precompValues[1].copyContent(*this);
@@ -852,20 +838,35 @@ void BigInt::exp(const BigInt &e, const BigInt &m, BigInt &ret)
 		this->mulMont(precompValues[i - 1], m, precompValues[i]);
 	}
 
+//	for (i = 0; i < k; ++i) {
+//		DEBUG("precompValues[{}] = {}", i, precompValues[i].toString());
+//	}
+
 	e.splitToRWords(rWords, 5);
-
-	C.copyContent(precompValues[rWords[0]]);
-
-	for (i = 1; i < rWords.size(); ++i) {
-		//DEBUG("rWords[{}] = {:X}",i, rWords[i]);
+	size = rWords.size();
+	//int start = 0;
+	C.copyContent(precompValues[rWords[size - 1]]);
+	//DEBUG("rWords[last] = {0} ({0:X}, {0:b})", rWords[size - 1]);
+	//DEBUG("set C to = {}",C.toString());
+	for (i = size - 2; i >= 0; --i) {
+		//if (start) {DEBUG("C1 = {}",C.toString());}
 		C.mulMont(C, m, C);
+		//if (start) {DEBUG("C2 = {}",C.toString());}
 		C.mulMont(C, m, C);
+		//if (start) {DEBUG("C3 = {}",C.toString());}
 		C.mulMont(C, m, C);
+		//if (start) {DEBUG("C4 = {}",C.toString());}
 		C.mulMont(C, m, C);
+		//if (start) {DEBUG("C5 = {}",C.toString());}
 		C.mulMont(C, m, C);
+		//if (start) {DEBUG("C6 = {}",C.toString());}
 		if (rWords[i]) {
+			//start = 1;
+			//DEBUG("rWords[{1}] = {0} ({0:X}, {0:b})", rWords[i], i);
 			C.mulMont(precompValues[rWords[i]], m, C);
+			//DEBUG("precompValues[{}] = {}",rWords[i], precompValues[rWords[i]].toString());
 		}
+		//if (start) {DEBUG("final C = {}",C.toString());}
 	}
 	ret.copyContent(C);
 }
