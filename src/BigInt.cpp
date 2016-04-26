@@ -622,6 +622,7 @@ void BigInt::mulMont(const BigInt &y, const BigInt &m, BigInt &ret) const
 	assert(m.getBit(0) == 1);
 
 	// this - x
+	//BigInt result;
 	BigInt result(BIGINT_DOUBLE_BITS);
 
 	bool overflow = false;
@@ -673,7 +674,7 @@ void BigInt::mulMont(const BigInt &y, const BigInt &m, BigInt &ret) const
 		result.shiftRightBlock(1);
 		if (overflow) {
 			DEBUG("Set overflowed bit");
-			result.setBit(length_ - 1, 1);
+			result.setBit(result.length_ - 1, 1);
 		}
 		//DEBUG("result after shift {}", result.toString());
 	}
@@ -682,6 +683,7 @@ void BigInt::mulMont(const BigInt &y, const BigInt &m, BigInt &ret) const
 		//DEBUG("SUB");
 	}
 	//DEBUG("temp {} mostSigBit = {}", result.toString(), result.getPosMostSignificatnBit());
+	result.copyContent(result);
 	result.shiftLeft(len + 1);
 	//DEBUG("temp shift {},  mostSigBit = {}", result.toString(), result.getPosMostSignificatnBit());
 	result.mod(m);
@@ -746,7 +748,6 @@ void BigInt::mod(const BigInt &m)
 	const int k = m.posMostSignBit_;
 	int posMostSignBitZ = getPosMostSignificatnBit();
 
-	//DEBUG("pos most sign bit Z = {}", posMostSignBitZ);
 	assert(posMostSignBitZ - k <= k + 1);
 
 	if (cmp(m) == -1) {
@@ -757,7 +758,6 @@ void BigInt::mod(const BigInt &m)
 		return;
 	}
 	int i;
-	//DEBUG("dif = {}", posMostSignBitZ - k);
 	for (i = posMostSignBitZ; i >= k; --i) {
 		if (clearBit(i)) {
 			r.add(*(m.preComputedTable_[i - k]));
@@ -788,17 +788,14 @@ void BigInt::splitToRWords(std::vector<block> &rWords, int lenBits) const
 	for (posBlock = len - 1; posBlock >= 0; --posBlock) {
 		for (leftBits = WORD_BITS - 1; leftBits >= 0; --leftBits) {
 			bitValue = (rawArray[posBlock] >> leftBits) & 1;
-			//DEBUG("before rWord = {}", rWord);
 			// set bit to rWord
 			rWord ^= (-bitValue ^ rWord) & (1 << rWordBitPos);
-			//DEBUG("after rWord = {}", rWord);
 			if (rWordBitPos != 0) {
 				// move to other bit position
 				--rWordBitPos;
 			} else {
 				// push rWord to vector and clear data
 				rWordBitPos = lenBits - 1;
-				//DEBUG("rWord = {}, but possible max is {}", rWord, maxValue);
 				assert(rWord <= maxValue);
 				rWords.push_back(rWord);
 				rWord = 0;
@@ -807,7 +804,6 @@ void BigInt::splitToRWords(std::vector<block> &rWords, int lenBits) const
 	}
 	if (rWordBitPos != lenBits - 1) {
 		rWord >>= rWordBitPos + 1;
-		//DEBUG("last shift to rWordBitPos = {} , rWord = {}", rWordBitPos + 1, rWord);
 		rWords.push_back(rWord);
 	}
 	std::reverse(rWords.begin(), rWords.end());
@@ -817,56 +813,37 @@ void BigInt::exp(const BigInt &e, const BigInt &m, BigInt &ret)
 {
 	BigInt C;
 	std::vector<block> rWords;
-	int i;
+	int i, j;
 	int size;
 	///
-	/// k = 5 => m = b = 2^k = 32
+	/// k = 5 => b = 2^k = 32
 	///
-	const int k = 32;
-	BigInt precompValues[k];
+	const int k = 5;
+	const int b = 32;
+	BigInt precompValues[b];
 
 	/* check x less that mod */
-//	DEBUG("this = {}", toString());
-//	DEBUG("m = {}", m.toString());
 	this->mod(m);
-	//DEBUG("this = {}", toString());
 
 	precompValues[0].setNumber(1);
 	precompValues[1].copyContent(*this);
 
-	for (i = 2; i < k; ++i) {
+	for (i = 2; i < b; ++i) {
 		this->mulMont(precompValues[i - 1], m, precompValues[i]);
 	}
 
-//	for (i = 0; i < k; ++i) {
-//		DEBUG("precompValues[{}] = {}", i, precompValues[i].toString());
-//	}
-
-	e.splitToRWords(rWords, 5);
+	e.splitToRWords(rWords, k);
 	size = rWords.size();
-	//int start = 0;
+
 	C.copyContent(precompValues[rWords[size - 1]]);
-	//DEBUG("rWords[last] = {0} ({0:X}, {0:b})", rWords[size - 1]);
-	//DEBUG("set C to = {}",C.toString());
+
 	for (i = size - 2; i >= 0; --i) {
-		//if (start) {DEBUG("C1 = {}",C.toString());}
-		C.mulMont(C, m, C);
-		//if (start) {DEBUG("C2 = {}",C.toString());}
-		C.mulMont(C, m, C);
-		//if (start) {DEBUG("C3 = {}",C.toString());}
-		C.mulMont(C, m, C);
-		//if (start) {DEBUG("C4 = {}",C.toString());}
-		C.mulMont(C, m, C);
-		//if (start) {DEBUG("C5 = {}",C.toString());}
-		C.mulMont(C, m, C);
-		//if (start) {DEBUG("C6 = {}",C.toString());}
-		if (rWords[i]) {
-			//start = 1;
-			//DEBUG("rWords[{1}] = {0} ({0:X}, {0:b})", rWords[i], i);
-			C.mulMont(precompValues[rWords[i]], m, C);
-			//DEBUG("precompValues[{}] = {}",rWords[i], precompValues[rWords[i]].toString());
+		for (j = 0; j < k; ++j) {
+			C.mulMont(C, m, C);
 		}
-		//if (start) {DEBUG("final C = {}",C.toString());}
+		if (rWords[i]) {
+			C.mulMont(precompValues[rWords[i]], m, C);
+		}
 	}
 	ret.copyContent(C);
 }

@@ -303,42 +303,42 @@ void testMontgomeryMultiplication()
 {
 	BigInt x, y, m, check, ret;
 
-//	x.setNumber(3);
-//	y.setNumber(5);
-//	m.setNumber(17);
-//	m.initModularReduction();
-//	x.mulMont(y, m, ret);
-//	m.shutDownModularReduction();
-//	check.setNumber(15);
-//	assertMsg(ret.isEqual(check), "Fail mont mul in simple case.");
+	x.setNumber(3);
+	y.setNumber(5);
+	m.setNumber(17);
+	m.initModularReduction();
+	x.mulMont(y, m, ret);
+	m.shutDownModularReduction();
+	check.setNumber(15);
+	assertMsg(ret.isEqual(check), "Fail mont mul in simple case.");
 
-//	x.fromString("4cd");
-//	y.fromString("16a0");
-//	m.fromString("11bbf");
-//	check.setNumber(0x11AC1);
+	x.fromString("4cd");
+	y.fromString("16a0");
+	m.fromString("11bbf");
+	check.setNumber(0x11AC1);
 
-//	m.initModularReduction();
-//	x.mulMont(y, m, ret);
-//	m.shutDownModularReduction();
-//	assertMsg(ret.isEqual(check), "Fail mont mul in midle case.");
+	m.initModularReduction();
+	x.mulMont(y, m, ret);
+	m.shutDownModularReduction();
+	assertMsg(ret.isEqual(check), "Fail mont mul in midle case.");
 
-//	x.fromString("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-//		     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-//		     "aaaaaaaaaaaaaaaaaaaaaaa");
-//	y.fromString("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaFFFFFFFFFF"
-//		     "Ffffffffffffffffffffffffffffffff1231723617231218238899798797a979a8a9"
-//		     "7a97a987aa78a798797979");
-//	m.fromString("bbbbbbbbbddbbcbdbdbcdcbdbcdbcbbdfffffff1231723617231218238899798797a"
-//		     "979a8a97a97a987aa78a798797979798cd8c7d87cd987c8d7c9d7c97d9c7d8748236"
-//		     "4827368476238468273648273648263641041209809423942091");
-//	check.fromString("A4E23E498064BFB3CC0D5F510A9D94BD062BECE7ED22DAE3C9ED62336E106D64"
-//			 "EABF956A92A94710B96112F2955BE4D87DB247F525E637CBA627B337B28EC50B"
-//			 "F86499DF8E0E02DDE203D9E237F213FE865699021B87553412878A427811");
+	x.fromString("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+		     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+		     "aaaaaaaaaaaaaaaaaaaaaaa");
+	y.fromString("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaFFFFFFFFFF"
+		     "Ffffffffffffffffffffffffffffffff1231723617231218238899798797a979a8a9"
+		     "7a97a987aa78a798797979");
+	m.fromString("bbbbbbbbbddbbcbdbdbcdcbdbcdbcbbdfffffff1231723617231218238899798797a"
+		     "979a8a97a97a987aa78a798797979798cd8c7d87cd987c8d7c9d7c97d9c7d8748236"
+		     "4827368476238468273648273648263641041209809423942091");
+	check.fromString("A4E23E498064BFB3CC0D5F510A9D94BD062BECE7ED22DAE3C9ED62336E106D64"
+			 "EABF956A92A94710B96112F2955BE4D87DB247F525E637CBA627B337B28EC50B"
+			 "F86499DF8E0E02DDE203D9E237F213FE865699021B87553412878A427811");
 
-//	m.initModularReduction();
-//	x.mulMont(y, m, ret);
-//	m.shutDownModularReduction();
-//	assertMsg(ret.isEqual(check), "Fail mont mul in large case.");
+	m.initModularReduction();
+	x.mulMont(y, m, ret);
+	m.shutDownModularReduction();
+	assertMsg(ret.isEqual(check), "Fail mont mul in large case.");
 
 	x.fromString("4B");
 	y.fromString("4B");
@@ -348,10 +348,6 @@ void testMontgomeryMultiplication()
 	x.mulMont(y, m, ret);
 	m.shutDownModularReduction();
 
-	LOG("x = {}", x.toString());
-	LOG("y = {}", y.toString());
-	LOG("m = {}", m.toString());
-	LOG("ret = {}", ret.toString());
 	check.fromString("42");
 	assertMsg(ret.isEqual(check), "Fail mont mul in squaring case.");
 
@@ -449,11 +445,6 @@ void testExp()
 	m.shutDownModularReduction();
 	assertMsg(ret.isEqual(one), "Fail of test Ferma");
 
-//	LOG("a = {}", a.toString());
-//	LOG("e = {}", e.toString());
-//	LOG("m = {}", m.toString());
-//	LOG("ret = {}", ret.toString());
-
 	a.fromString("5AC");
 	m.fromString("6D");
 	e.fromString("6C");
@@ -505,7 +496,7 @@ int main(int argc, char *argv[])
 
 //	mesureTimeRunning(mulBitByOne);
 //	mesureTimeRunning(mulBitByZero);
-//	mesureTimeRunning(testExp);
+	mesureTimeRunning(testExp);
 
 
 	LOG("End tests.");
