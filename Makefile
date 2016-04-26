@@ -3,6 +3,7 @@ CC = g++
 INCLUDES = -I./logger -I./logger/spdlog/include
 LIBS = -pthread
 
+CUSTOM_CFLAGS=
 CFLAGS = -std=c++11 -Wall -Wpedantic
 LFLAGS =
 
@@ -11,19 +12,19 @@ TARGET = App
 SRCS =
 
 ifeq ($(MAKECMDGOALS),release)
-	CFLAGS := $(CFLAGS) -O3
+	CFLAGS := $(CFLAGS) -O3 $(CUSTOM_CFLAGS)
 	TARGET := release$(TARGET)
 	SRCS := $(COMMON_SRCS) main.cpp
 endif
 
 ifeq ($(MAKECMDGOALS),debug)
-	CFLAGS := $(CFLAGS) -O0 -g3 -DDEBUG_ON
+	CFLAGS := $(CFLAGS) -O0 -g3 -DDEBUG_ON $(CUSTOM_CFLAGS)
 	TARGET := debug$(TARGET)
 	SRCS := $(COMMON_SRCS) main.cpp
 endif
 
 ifeq ($(MAKECMDGOALS),test)
-	CFLAGS := $(CFLAGS) -O0 -g3 -DDEBUG_ON
+	CFLAGS := $(CFLAGS) -O0 -g3 -DDEBUG_ON $(CUSTOM_CFLAGS)
 	TARGET := test$(TARGET)
 	SRCS := $(COMMON_SRCS) $(wildcard ./tests/*.cpp)
 endif

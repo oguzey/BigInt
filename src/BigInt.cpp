@@ -523,7 +523,7 @@ bool BigInt::add(const BigInt &number)
 	}
 
 	if (size_ == number.size_) {
-		carry = blocks_[number.size_ - 1] >> maxValueLastBlock_;
+		carry = blocks_[number.size_ - 1] >> countBistLastBlock_;
 		blocks_[number.size_ - 1] &= maxValueLastBlock_;
 	} else {
 		for (i = number.size_; i < size_ - 1; ++i) {
@@ -532,7 +532,7 @@ bool BigInt::add(const BigInt &number)
 			blocks_[i] &= BLOCK_MAX_NUMBER;
 			assert((carry & 1) == carry);
 		}
-		carry = blocks_[size_ - 1] >> maxValueLastBlock_;
+		carry = blocks_[size_ - 1] >> countBistLastBlock_;
 		blocks_[size_ - 1] &= maxValueLastBlock_;
 	}
 	assert((carry & 1) == carry);
@@ -622,7 +622,6 @@ void BigInt::mulMont(const BigInt &y, const BigInt &m, BigInt &ret) const
 	assert(m.getBit(0) == 1);
 
 	// this - x
-	//BigInt result;
 	BigInt result(BIGINT_DOUBLE_BITS);
 
 	bool overflow = false;
@@ -640,35 +639,16 @@ void BigInt::mulMont(const BigInt &y, const BigInt &m, BigInt &ret) const
 		overflow = false;
 
 		xi = this->getBit(i);
-		assert((xi & 1) == xi);
-		assert((result.getBit(0) & 1) == result.getBit(0));
-//		LOG("i = {}", i);
-//		LOG("x{} = {}",i, xi);
+//		assert((xi & 1) == xi);
+//		assert((result.getBit(0) & 1) == result.getBit(0));
 		u = (result.getBit(0) + xi * y0) % 2;
 		assert((u & 1) == u);
-		//LOG("u{} = {}",i, u);
 
 		if (xi) {
-			//DEBUG("result {}  + ", result.toString());
-			//DEBUG("y {}  + ", y.toString());
 			overflow = result.add(y);
-			//DEBUG(" = result {}", result.toString());
-			//DEBUG("Overflow A + y = {}", overflow);
 		}
 		if (u) {
-			//DEBUG("result {}  + ", result.toString());
-			//DEBUG("m {}  + ", m.toString());
-			bool overflow2 = result.add(m);
-			//DEBUG(" = result {}", result.toString());
-			//DEBUG("Overflow A + m = {}", overflow2);
-			if (overflow) {
-				if (overflow2) {
-					assert(1 == 0);
-				} else {
-					assert(2 == 0);
-				}
-			}
-			overflow = overflow2;
+			overflow |= result.add(m);
 		}
 		assert(result.getBit(0) == 0);
 		result.shiftRightBlock(1);
@@ -676,20 +656,15 @@ void BigInt::mulMont(const BigInt &y, const BigInt &m, BigInt &ret) const
 			DEBUG("Set overflowed bit");
 			result.setBit(result.length_ - 1, 1);
 		}
-		//DEBUG("result after shift {}", result.toString());
 	}
 	if (result.cmp(m) == 1) {
 		result.sub(m);
-		//DEBUG("SUB");
 	}
-	//DEBUG("temp {} mostSigBit = {}", result.toString(), result.getPosMostSignificatnBit());
 	result.copyContent(result);
 	result.shiftLeft(len + 1);
-	//DEBUG("temp shift {},  mostSigBit = {}", result.toString(), result.getPosMostSignificatnBit());
 	result.mod(m);
-	//DEBUG("result {},  mostSigBit = {}", result.toString(), result.getPosMostSignificatnBit());
 
-	assert(result.getPosMostSignificatnBit() <= BIGINT_BITS);
+	//assert(result.getPosMostSignificatnBit() <= BIGINT_BITS);
 	ret.copyContent(result);
 }
 
@@ -702,7 +677,7 @@ void BigInt::initModularReduction()
 	const int len = posMostSignBit_ + 2;
 	preComputedTable_ = new BigInt*[len];
 	int i;
-	DEBUG("length of table {}", len);
+	//DEBUG("length of table {}", len);
 	preComputedTable_[0] = new BigInt(BIGINT_DOUBLE_BITS);
 	preComputedTable_[0]->setNumber(1);
 	preComputedTable_[0]->shiftLeft(posMostSignBit_);

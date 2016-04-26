@@ -14,11 +14,11 @@ info(){
 make clean
 
 build () {
-	make "$1"
+	eval "make $2 CUSTOM_CFLAGS=\"${@:3}\""
 	if [ "$?" == 0 ]; then
 		info "Build was successful"
 		info "Run application"
-		$2
+		$1
 		return $?
 	else
 		fail "Build end with fails"
@@ -28,13 +28,13 @@ build () {
 
 if [ "$1" == "release" ]; then
 	info "Start build release version of application"
-	build "release" "./releaseApp"
+	build "./releaseApp" "${@:1}"
 elif [ "$1" == "debug" ] || [ -z ${1+x} ]; then
 	info "Start build debug version of application"
-	build "debug" "./debugApp"
+	build "./debugApp" "${@:1}"
 elif [ "$1" == "test" ]; then
 	info "Start build tests"
-	build "test" "./testApp"
+	build "./testApp" "${@:1}"
 	if [ "$?" == 0 ]; then
 		info "All tests passed"
 	else
