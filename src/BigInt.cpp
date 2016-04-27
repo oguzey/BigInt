@@ -388,6 +388,19 @@ void BigInt::shiftRightBlock(unsigned int countBits)
 	}
 }
 
+void BigInt::shiftRightBit()
+{
+	unsigned int i = 0;
+	block carryBit = 0;
+
+	blocks_[0] >>= 1;
+	for (i = 1; i < size_; ++i) {
+		carryBit = blocks_[i] & 1;
+		blocks_[i - 1] |= carryBit << (BLOCK_BITS - 1);
+		blocks_[i] >>= 1;
+	}
+}
+
 void BigInt::shiftRight(unsigned int countBits)
 {
 	if (countBits >= length_) {
@@ -517,25 +530,25 @@ bool BigInt::add(const BigInt &number)
 
 	for(i = 0 ; i < number.size_; ++i) {
 		blocks_[i] += number.blocks_[i] + carry;
-		carry = blocks_[i] >> BLOCK_BITS;
+		carry = !!(blocks_[i] & ~BLOCK_MAX_NUMBER);
 		blocks_[i] &= BLOCK_MAX_NUMBER;
-		assert((carry & 1) == carry);
+		//assert((carry & 1) == carry);
 	}
 
 	if (size_ == number.size_) {
-		carry = blocks_[number.size_ - 1] >> countBistLastBlock_;
+		carry = !!(blocks_[number.size_ - 1] & ~maxValueLastBlock_);
 		blocks_[number.size_ - 1] &= maxValueLastBlock_;
 	} else {
 		for (i = number.size_; i < size_ - 1; ++i) {
 			blocks_[i] += carry;
-			carry = blocks_[i] >> BLOCK_BITS;
+			carry = !!(blocks_[i] & ~BLOCK_MAX_NUMBER);
 			blocks_[i] &= BLOCK_MAX_NUMBER;
-			assert((carry & 1) == carry);
+			//assert((carry & 1) == carry);
 		}
-		carry = blocks_[size_ - 1] >> countBistLastBlock_;
+		carry = !!(blocks_[size_ - 1] & ~maxValueLastBlock_);
 		blocks_[size_ - 1] &= maxValueLastBlock_;
 	}
-	assert((carry & 1) == carry);
+	//assert((carry & 1) == carry);
 	return carry;
 }
 
@@ -619,12 +632,13 @@ void BigInt::mulMont(const BigInt &y, const BigInt &m, BigInt &ret) const
 	// gcd(m; b) = 1
 	// b == 2
 	// m should be odd
-	assert(m.getBit(0) == 1);
+	//assert(m.getBit(0) == 1);
 
 	// this - x
-	BigInt result(BIGINT_DOUBLE_BITS);
+	BigInt resultSmall;
+	BigInt resultDouble(BIGINT_DOUBLE_BITS);
+	block hight = 0;
 
-	bool overflow = false;
 	unsigned int u = 0;
 	unsigned int y0 = y.getBit(0);
 	unsigned int xi = 0;
@@ -633,39 +647,46 @@ void BigInt::mulMont(const BigInt &y, const BigInt &m, BigInt &ret) const
 	// fing max len of numbers
 	unsigned int len = m.posMostSignBit_;
 
-	//DEBUG("max len is {}", len);
-
 	for (i = 0; i <= len; ++i) {
-		overflow = false;
-
 		xi = this->getBit(i);
 //		assert((xi & 1) == xi);
 //		assert((result.getBit(0) & 1) == result.getBit(0));
-		u = (result.getBit(0) + xi * y0) % 2;
-		assert((u & 1) == u);
+		u = (resultSmall.getBit(0) + xi * y0) % 2;
+		//assert((u & 1) == u);
 
 		if (xi) {
-			overflow = result.add(y);
+			hight += resultSmall.add(y);
 		}
 		if (u) {
-			overflow |= result.add(m);
+			hight += resultSmall.add(m);
 		}
-		assert(result.getBit(0) == 0);
-		result.shiftRightBlock(1);
-		if (overflow) {
-			DEBUG("Set overflowed bit");
-			result.setBit(result.length_ - 1, 1);
+//		assert(result.getBit(0) == 0);
+		resultSmall.shiftRightBit();
+
+		if ((hight & 1)) {
+			resultSmall.setBit(resultSmall.length_ - 1, 1);
 		}
+		hight >>= 1;
 	}
-	if (result.cmp(m) == 1) {
-		result.sub(m);
+
+	resultDouble.copyContent(resultSmall);
+	i = 0;
+	while (hight) {
+		if (hight & 1) {
+			resultDouble.setBit(resultSmall.length_ + i, 1);
+		}
+		hight >>= 1;
+		++i;
 	}
-	result.copyContent(result);
-	result.shiftLeft(len + 1);
-	result.mod(m);
+
+	if (resultDouble.cmp(m) == 1) {
+		resultDouble.sub(m);
+	}
+	resultDouble.shiftLeft(len + 1);
+	resultDouble.mod(m);
 
 	//assert(result.getPosMostSignificatnBit() <= BIGINT_BITS);
-	ret.copyContent(result);
+	ret.copyContent(resultDouble);
 }
 
 void BigInt::initModularReduction()

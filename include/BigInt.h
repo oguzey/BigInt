@@ -44,6 +44,7 @@ public:
 	void shiftLeftBlock(unsigned int countBits);
 	void shiftLeft(unsigned int countBits);
 	void shiftRightBlock(unsigned int countBits);
+	void shiftRightBit();
 	void shiftRight(unsigned int countBits);
 	void setBit(unsigned int position, unsigned int value) const;
 	int getBit(unsigned int position) const;

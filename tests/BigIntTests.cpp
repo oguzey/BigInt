@@ -494,8 +494,8 @@ int main(int argc, char *argv[])
 	runTest(testCopy);
 	runTest(testExp);
 
-//	mesureTimeRunning(mulBitByOne);
-//	mesureTimeRunning(mulBitByZero);
+	mesureTimeRunning(mulBitByOne);
+	mesureTimeRunning(mulBitByZero);
 	mesureTimeRunning(testExp);
 
 
