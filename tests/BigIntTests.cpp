@@ -455,6 +455,32 @@ void testExp()
 
 }
 
+void testDivision()
+{
+	BigInt x, y, q, r, q_check, r_check;
+
+	x.fromString("F7A7F74B184E5C253EC2B0CB27C8DB99F047968D7BB506A6A2C424471A"
+		     "B9800F7A7F74B184E5C253EC2B0CB27C8DB99F047968D7BB506A6A2C424"
+		     "471AB9800F7A7F74B184E5C253EC2B0CB27C8DB99F047968D7BB506A6A2"
+		     "C424471AB9800F7A7F74B184E5C253EC2B0CB27C8DB99F047968D7BB506"
+		     "A6A2C424471AB9800F");
+	y.setMax();
+	y.shiftRight(100);
+
+	q_check.fromString("F7A7F74B184E5C253EC2B0");
+	r_check.fromString("0000000000000000000000000CB27C8DB99F047968D7BB506A6A"
+			"2C424471AB9800F7A7F74B184E5C253EC2B0CB27C8DB99F04796"
+			"8D7BB506A6A2C424471AB9800F7A7F74B184E5C253EC2B0CB27C"
+			"8DB99F047968D7BB506A6A2C424471AB9800F7A7F74B184E5C25"
+			"3EC2B0CB27C8DB99F047968D7CACAE9DEDDC72A33FF842BF");
+
+	bool res = x.div(y, q, r);
+
+	assertMsg(res, "Operation was not executed.")
+	assertMsg(r.isEqual(r_check), "R was wrong.");
+	assertMsg(q.isEqual(q_check), "R was wrong.");
+}
+
 
 void mulBitByOne()
 {
@@ -493,6 +519,7 @@ int main(int argc, char *argv[])
 	runTest(testModularReduction);
 	runTest(testCopy);
 	runTest(testExp);
+	runTest(testDivision);
 
 	mesureTimeRunning(mulBitByOne);
 	mesureTimeRunning(mulBitByZero);

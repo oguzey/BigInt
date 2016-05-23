@@ -27,7 +27,7 @@ public:
 	bool add(const BigInt &number);
 	void sub(const BigInt &number);
 	void mulByBit(int bitValue);
-	bool div(const BigInt &N, const BigInt &D, BigInt *Q, BigInt *R);
+	bool div(const BigInt &y, BigInt &q, BigInt &r);
 	void mulMont(const BigInt &y, const BigInt &m, BigInt &ret) const;
 	void mod(const BigInt &m);
 	void exp(const BigInt &e, const BigInt &m, BigInt &ret);

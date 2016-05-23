@@ -595,26 +595,20 @@ void BigInt::mulByBit(int bitValue)
 	}
 }
 
-bool BigInt::div(const BigInt &N, const BigInt &D, BigInt *Q, BigInt *R)
+bool BigInt::div(const BigInt &y, BigInt &q, BigInt &r)
 {
-	int res;
-
-	if (D.isZero()) {
+	if (y.isZero()) {
 		WARN("Could not divide by zero.");
 		return false;
 	}
-
-	Q = new BigInt(BIGINT_BITS);
-	R = new BigInt(BIGINT_BITS);
-
-	int i;
-	for (i = N.length_ - 1; i >= 0; --i) {
-		R->shiftLeftBlock(1);
-		R->setBit(0, N.getBit(i));
-		res = R->cmp(D);
+	int res;
+	for (int i = length_ - 1; i >= 0; --i) {
+		r.shiftLeftBlock(1);
+		r.setBit(0, getBit(i));
+		res = r.cmp(y);
 		if (res == 1 || res == 0) {
-			R->sub(D);
-			Q->setBit(i, 1);
+			r.sub(y);
+			q.setBit(i, 1);
 		}
 	}
 	return true;
