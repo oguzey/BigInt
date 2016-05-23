@@ -1,9 +1,9 @@
 #include <iostream>
-#include "include/BigInt.h"
-
 #define ALLOCATE_LOGGER
 #include "logger/logger.h"
-
+#undef ALLOCATE_LOGGER
+#include "include/BigInt.h"
+#include "include/GeneratorMush.h"
 
 int main() {
 	// create default BigInt
@@ -34,6 +34,16 @@ int main() {
 	m.shutDownModularReduction();
 
 	LOG("Result of multiplication is {}", ret.toString());
+
+	LOG("Test generator Mush start.");
+
+	GeneratorMush gen;
+
+	for (int i = 0; i < 100; ++i) {
+		LOG("gen output[{}] = {}", i, gen.getRandomNumber());
+	}
+
+	LOG("Test generator Mush end.");
 
 	return 0;
 }
