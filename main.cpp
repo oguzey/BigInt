@@ -3,7 +3,7 @@
 #include "logger/logger.h"
 #undef ALLOCATE_LOGGER
 #include "include/BigInt.h"
-#include "include/GeneratorMush.h"
+#include "include/PrimeBigInt.h"
 
 int main() {
 	// create default BigInt
@@ -35,15 +35,9 @@ int main() {
 
 	LOG("Result of multiplication is {}", ret.toString());
 
-	LOG("Test generator Mush start.");
-
-	GeneratorMush gen;
-
-	for (int i = 0; i < 100; ++i) {
-		LOG("gen output[{}] = {}", i, gen.getRandomNumber());
-	}
-
-	LOG("Test generator Mush end.");
+	LOG("Test Prime number");
+	PrimeBigInt p;
+	LOG("Prime number = {}", p.toString());
 
 	return 0;
 }

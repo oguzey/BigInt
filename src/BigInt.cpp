@@ -3,7 +3,7 @@
 #include <math.h>
 #include "../logger/logger.h"
 #include "../include/BigInt.h"
-
+#include "../include/GeneratorMush.h"
 
 #define WORD_BITS			32
 #define BYTE_BITS			8
@@ -449,6 +449,19 @@ int BigInt::cmp(const BigInt &number) const
 	return diff > 0 ? 1 : diff < 0 ? -1 : 0;
 }
 
+int BigInt::cmp(block number) const
+{
+	if (blocks_[0] > number) {
+		return 1;
+	}
+	for (unsigned int i = 1; i < size_; ++i) {
+		if (blocks_[i]) {
+			return 1;
+		}
+	}
+	return blocks_[0] == number ? 0 : -1;
+}
+
 void BigInt::setBit(unsigned int position, unsigned int value) const
 {
 	assert((value & 1) == value);
@@ -598,7 +611,7 @@ void BigInt::mulByBit(int bitValue)
 bool BigInt::div(const BigInt &y, BigInt &q, BigInt &r)
 {
 	if (y.isZero()) {
-		WARN("Could not divide by zero.");
+		CRITICAL("Could not divide by zero.");
 		return false;
 	}
 	int res;
@@ -836,4 +849,16 @@ void BigInt::exp(const BigInt &e, const BigInt &m, BigInt &ret)
 		}
 	}
 	ret.copyContent(C);
+}
+
+void BigInt::generateRand()
+{
+	int size = length_ / WORD_BITS;
+	std::vector<block> randArray(size);
+	GeneratorMush gen;
+
+	for (int i = 0; i < size; ++i) {
+		randArray[i] = gen.next32bit();
+	}
+	rawArrayToBlocks(randArray);
 }

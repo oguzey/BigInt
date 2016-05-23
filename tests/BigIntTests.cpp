@@ -180,6 +180,17 @@ void testCmp()
 	a.setNumber(255);
 	assertMsg(a.cmp(b) == 0, "255 != 255.");
 	assertMsg(b.cmp(a) == 0, "255 != 255 (2)");
+
+	a.setNumber(1201);
+	b.setNumber(13);
+	assertMsg(a.cmp(13) == 1, "1201 < 13");
+	assertMsg(b.cmp(1201) == -1, "1201 < 13 (2)");
+
+	b.setBit(100, 1);
+	assertMsg(b.cmp(1201) == 1, "Fail of comparison");
+
+	a.setNumber(42);
+	assertMsg(a.cmp(42) == 0, "Fail of comparison 2");
 }
 
 void testBits()
@@ -481,6 +492,12 @@ void testDivision()
 	assertMsg(q.isEqual(q_check), "R was wrong.");
 }
 
+void testGenerator()
+{
+	BigInt a;
+	a.generateRand();
+	assertMsg(a.isZero() == false, "Number is zero");
+}
 
 void mulBitByOne()
 {
@@ -520,6 +537,7 @@ int main(int argc, char *argv[])
 	runTest(testCopy);
 	runTest(testExp);
 	runTest(testDivision);
+	runTest(testGenerator);
 
 	mesureTimeRunning(mulBitByOne);
 	mesureTimeRunning(mulBitByZero);

@@ -17,7 +17,7 @@ public:
 	BigInt(const char *strHexNumber);
 	BigInt(std::string &strHexNumber);
 	BigInt(BigInt&& number);
-	~BigInt();
+	virtual ~BigInt();
 	BigInt& operator=(BigInt&& number) = delete;
 	///
 	/// only for tests
@@ -38,6 +38,7 @@ public:
 	///  0 if this == number
 	///
 	int cmp(const BigInt &number) const;
+	int cmp(block number) const;
 	int fromString(const char *hexString);
 	int fromString(const std::string &hexString);
 	std::string toString() const;
@@ -71,6 +72,7 @@ public:
 	/// multiplication `mulMont`.
 	///
 	void shutDownModularReduction();
+	void generateRand();
 
 private:
 	block *blocks_;

@@ -37,7 +37,7 @@ public:
 	}
 	~GeneratorMush() {LOG("New generator was destroyed.");}
 
-	unsigned int getRandomNumber()
+	unsigned int next32bit()
 	{
 		if (overflowA) {
 			runSubGeneratorB();
