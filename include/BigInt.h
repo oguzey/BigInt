@@ -74,6 +74,7 @@ public:
 	void shutDownModularReduction();
 	void generateRand();
 	void generatePrime();
+	void gcd(const BigInt &a, BigInt &res) const;
 
 private:
 	block *blocks_;

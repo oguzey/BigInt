@@ -499,6 +499,36 @@ void testGenerator()
 	assertMsg(a.isZero() == false, "Number is zero");
 }
 
+void testGcd()
+{
+	BigInt x, y, res, check;
+
+	x.fromString("91983EE1A5CA112BE56574780");
+	y.fromString("190DFBA1C8DA7A68A");
+	x.gcd(y, res);
+
+	check.fromString("25A");
+
+	assertMsg(res.isEqual(check), "Test gcd failed.");
+
+	y.setZero();
+	check.copyContent(x);
+	x.gcd(y, res);
+	assertMsg(res.isEqual(check), "Test gcd failed (y = 0).");
+
+	x.setZero();
+	y.fromString("C86FDD0E46D3D345");
+	check.copyContent(y);
+	x.gcd(y, res);
+	assertMsg(res.isEqual(check), "Test gcd failed (x = 0).");
+
+	x.setNumber(107);
+	y.setNumber(13);
+	check.setNumber(1);
+	x.gcd(y, res);
+	assertMsg(res.isEqual(check), "Test gcd failed (res = 1).");
+}
+
 void mulBitByOne()
 {
 	BigInt num;
@@ -538,6 +568,8 @@ int main(int argc, char *argv[])
 	runTest(testExp);
 	runTest(testDivision);
 	runTest(testGenerator);
+	runTest(testGcd);
+
 
 	mesureTimeRunning(mulBitByOne);
 	mesureTimeRunning(mulBitByZero);

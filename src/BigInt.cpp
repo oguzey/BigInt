@@ -865,17 +865,28 @@ void BigInt::generateRand()
 
 void BigInt::gcd(const BigInt &a, BigInt &res) const
 {
-	BigInt x, y, t;
+	if (isZero()) {
+		res.copyContent(a);
+		return;
+	}
+	if (a.isZero()) {
+		res.copyContent(*this);
+		return;
+	}
+
+
+	BigInt x;
 	x.copyContent(*this);
+
+	BigInt& y = res;
 	y.copyContent(a);
 
-
-	res.setNumber(1);
+	int g = 0;
 
 	while (x.getBit(0) == 0 && y.getBit(0) == 0) {
 		x.shiftRightBit();
 		y.shiftRightBit();
-		res.shiftLeftBlock(1);
+		++g;
 	}
 
 	while (!x.isZero()) {
@@ -887,11 +898,12 @@ void BigInt::gcd(const BigInt &a, BigInt &res) const
 		}
 		/* x >= y */
 		if (x.cmp(y) != -1) {
-			t.copyContent(x);
-			t.sub(y);
-			t.shiftRightBit();
+			x.sub(y);
+			x.shiftRightBit();
+		} else {
+			y.sub(x);
+			y.shiftRightBit();
 		}
 	}
-
-
+	y.shiftLeft(g);
 }
