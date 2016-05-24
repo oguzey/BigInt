@@ -16,26 +16,16 @@ static_assert(sizeof(int64_t) == 8, "Need 64-bit integer for generator");
 class GeneratorMush
 {
 public:
-	GeneratorMush()
+	static GeneratorMush& getGeneratorMush()
 	{
-		std::mt19937 rng;
-		rng.seed(std::random_device()());
-		std::uniform_int_distribution<std::mt19937::result_type> dist(0, UINT_MAX);
-
-		int i;
-
-		for (i = 0; i < sizeA; ++i) {
-			A[i] = dist(rng);
-		}
-
-		for (i = 0; i < sizeB; ++i) {
-			B[i] = dist(rng);
-		}
-		overflowA = false;
-		overflowB = false;
-		LOG("New generator was created.");
+		LOG("Get generator");
+		static GeneratorMush generator;
+		return generator;
 	}
+
 	~GeneratorMush() {LOG("New generator was destroyed.");}
+	GeneratorMush(GeneratorMush const&) = delete;
+	void operator=(GeneratorMush const&) = delete;
 
 	unsigned int next32bit()
 	{
@@ -61,6 +51,26 @@ private:
 	std::array<unsigned int, 52> B;
 	bool overflowA;
 	bool overflowB;
+
+	GeneratorMush()
+	{
+		std::mt19937 rng;
+		rng.seed(std::random_device()());
+		std::uniform_int_distribution<std::mt19937::result_type> dist(0, UINT_MAX);
+
+		int i;
+
+		for (i = 0; i < sizeA; ++i) {
+			A[i] = dist(rng);
+		}
+
+		for (i = 0; i < sizeB; ++i) {
+			B[i] = dist(rng);
+		}
+		overflowA = false;
+		overflowB = false;
+		LOG("New generator was created.");
+	}
 
 	void runSubGeneratorA()
 	{

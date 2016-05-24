@@ -1,9 +1,9 @@
 #include <cassert>
 #include <algorithm>
 #include <math.h>
-#include "../logger/logger.h"
-#include "../include/BigInt.h"
-#include "../include/GeneratorMush.h"
+#include "logger.h"
+#include "BigInt.h"
+#include "GeneratorMush.h"
 
 #define WORD_BITS			32
 #define BYTE_BITS			8
@@ -855,7 +855,7 @@ void BigInt::generateRand()
 {
 	int size = length_ / WORD_BITS;
 	std::vector<block> randArray(size);
-	GeneratorMush gen;
+	GeneratorMush& gen = GeneratorMush::getGeneratorMush();
 
 	for (int i = 0; i < size; ++i) {
 		randArray[i] = gen.next32bit();

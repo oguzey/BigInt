@@ -1,6 +1,6 @@
 CC = g++
 
-INCLUDES = -I./logger -I./logger/spdlog/include
+INCLUDES = -I./logger -I./logger/spdlog/include -I ./include
 LIBS = -pthread
 
 CUSTOM_CFLAGS=

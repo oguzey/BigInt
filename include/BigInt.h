@@ -73,6 +73,7 @@ public:
 	///
 	void shutDownModularReduction();
 	void generateRand();
+	void generatePrime();
 
 private:
 	block *blocks_;
@@ -94,5 +95,9 @@ private:
 	char integerToHexChar(int symbol) const;
 	void splitToRWords(std::vector<block> &rWords, int lenBits) const;
 	static block fillBits(unsigned int amountBits);
+	bool testSimpleDivision();
+	bool isDivisor(BigInt &x);
+	bool testMillerRabin_real(int k);
+	bool testMillerRabin(int k);
 };
 

@@ -3,7 +3,6 @@
 #include "logger/logger.h"
 #undef ALLOCATE_LOGGER
 #include "include/BigInt.h"
-#include "include/PrimeBigInt.h"
 
 int main() {
 	// create default BigInt
@@ -36,7 +35,8 @@ int main() {
 	LOG("Result of multiplication is {}", ret.toString());
 
 	LOG("Test Prime number");
-	PrimeBigInt p;
+	BigInt p;
+	p.generatePrime();
 	LOG("Prime number = {}", p.toString());
 
 	return 0;
