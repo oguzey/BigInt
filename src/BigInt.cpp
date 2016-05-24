@@ -862,3 +862,36 @@ void BigInt::generateRand()
 	}
 	rawArrayToBlocks(randArray);
 }
+
+void BigInt::gcd(const BigInt &a, BigInt &res) const
+{
+	BigInt x, y, t;
+	x.copyContent(*this);
+	y.copyContent(a);
+
+
+	res.setNumber(1);
+
+	while (x.getBit(0) == 0 && y.getBit(0) == 0) {
+		x.shiftRightBit();
+		y.shiftRightBit();
+		res.shiftLeftBlock(1);
+	}
+
+	while (!x.isZero()) {
+		while (x.getBit(0) == 0) {
+			x.shiftRightBit();
+		}
+		while (y.getBit(0) == 0) {
+			y.shiftRightBit();
+		}
+		/* x >= y */
+		if (x.cmp(y) != -1) {
+			t.copyContent(x);
+			t.sub(y);
+			t.shiftRightBit();
+		}
+	}
+
+
+}
