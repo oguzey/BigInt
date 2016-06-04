@@ -529,6 +529,28 @@ void testGcd()
 	assertMsg(res.isEqual(check), "Test gcd failed (res = 1).");
 }
 
+void testExtGCD()
+{
+	BigInt x, y, check, a, b, gcd;
+
+	x.fromString("91983EE1A5CA112BE56574780");
+	y.fromString("190DFBA1C8DA7A68A");
+	x.extGCD(y, a, b, gcd);
+
+	check.fromString("25A");
+
+	assertMsg(gcd.isEqual(check), "Test extended gcd failed.");
+
+	LOG("a = {}", a.toString());
+	LOG("b = {}", b.toString());
+	LOG("(x) {} \n* (a) {} + (y) {} \n* (b) {} \n= (v) {}", x.toString(),
+	    a.toString(), y.toString(), b.toString(), gcd.toString());
+
+	BigInt t;
+	t.setMax();
+	LOG("t = {}", t.toString());
+}
+
 void mulBitByOne()
 {
 	BigInt num;
@@ -569,6 +591,7 @@ int main(int argc, char *argv[])
 	runTest(testDivision);
 	runTest(testGenerator);
 	runTest(testGcd);
+	runTest(testExtGCD);
 
 
 	mesureTimeRunning(mulBitByOne);

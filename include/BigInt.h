@@ -75,6 +75,9 @@ public:
 	void generateRand();
 	void generatePrime();
 	void gcd(const BigInt &a, BigInt &res) const;
+	bool isEven() const;
+	void extGCD(const BigInt &y, BigInt &a, BigInt &b, BigInt &v) const;
+	void generateBlumPrime();
 
 private:
 	block *blocks_;
@@ -100,5 +103,7 @@ private:
 	bool isDivisor(BigInt &x);
 	bool testMillerRabin_real(int k);
 	bool testMillerRabin(int k);
+	void generatePartBlumPrime(const Generator &gen,
+				   std::vector<block> &randArray, int partSize);
 };
 

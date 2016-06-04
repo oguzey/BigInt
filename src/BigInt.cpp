@@ -3,7 +3,7 @@
 #include <math.h>
 #include "logger.h"
 #include "BigInt.h"
-#include "GeneratorMush.h"
+#include "Generator.h"
 
 #define WORD_BITS			32
 #define BYTE_BITS			8
@@ -416,7 +416,7 @@ void BigInt::shiftRight(unsigned int countBits)
 
 ///
 ///  1 if this > number
-/// -1 if number > this
+/// -1 if this < number
 ///  0 if this == number
 ///
 int BigInt::cmp(const BigInt &number) const
@@ -855,7 +855,7 @@ void BigInt::generateRand()
 {
 	int size = length_ / WORD_BITS;
 	std::vector<block> randArray(size);
-	GeneratorMush& gen = GeneratorMush::getGeneratorMush();
+	Generator& gen = GeneratorMush::getGeneratorMush();
 
 	for (int i = 0; i < size; ++i) {
 		randArray[i] = gen.next32bit();
@@ -883,17 +883,17 @@ void BigInt::gcd(const BigInt &a, BigInt &res) const
 
 	int g = 0;
 
-	while (x.getBit(0) == 0 && y.getBit(0) == 0) {
+	while (x.isEven() && y.isEven()) {
 		x.shiftRightBit();
 		y.shiftRightBit();
 		++g;
 	}
 
 	while (!x.isZero()) {
-		while (x.getBit(0) == 0) {
+		while (x.isEven()) {
 			x.shiftRightBit();
 		}
-		while (y.getBit(0) == 0) {
+		while (y.isEven()) {
 			y.shiftRightBit();
 		}
 		/* x >= y */
@@ -906,4 +906,76 @@ void BigInt::gcd(const BigInt &a, BigInt &res) const
 		}
 	}
 	y.shiftLeft(g);
+}
+
+bool BigInt::isEven() const
+{
+	return !(blocks_[0] & 1);
+}
+
+void BigInt::extGCD(const BigInt &y, BigInt &a, BigInt &b, BigInt &v) const
+{
+	int g = 0;
+	BigInt A, B, u, x, y2;
+	BigInt& C = a;
+	BigInt& D = b;
+
+	x.copyContent(*this);
+	y2.copyContent(y);
+
+	C.setZero();
+	D.setZero();
+
+	while (x.isEven() && y2.isEven()) {
+		x.shiftRightBit();
+		y2.shiftRightBit();
+		++g;
+	}
+
+	u.copyContent(x);
+	v.copyContent(y2);
+	A.setBit(0, 1); // set 1
+	D.setBit(0, 1); // set 1
+
+	while (u.isZero() == false) {
+		DEBUG("u = {}", u.toString());
+		while (u.isEven()) {
+			u.shiftRightBit();
+			if (A.isEven() && B.isEven()) {
+				A.shiftRightBit();
+				B.shiftRightBit();
+			} else {
+				A.add(y2);
+				A.shiftRightBit();
+				B.sub(x);
+				B.shiftRightBit();
+			}
+		}
+		while (v.isEven()) {
+			v.shiftRightBit();
+			if (C.isEven() && D.isEven()) {
+				C.shiftRightBit();
+				D.shiftRightBit();
+			} else {
+				C.add(y2);
+				C.shiftRightBit();
+				D.sub(x);
+				D.shiftRightBit();
+			}
+		}
+		if (u.cmp(v) != -1) {
+			DEBUG("u >= v");
+			u.sub(v);
+			A.sub(C);
+			B.sub(D);
+		} else {
+			DEBUG("u < v");
+			v.sub(u);
+			C.sub(A);
+			D.sub(B);
+		}
+	}
+
+	v.shiftLeft(g);
+	// return ( a, b, g * v)
 }

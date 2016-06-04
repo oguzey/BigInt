@@ -3,7 +3,7 @@
 #include "logger/logger.h"
 #undef ALLOCATE_LOGGER
 #include "include/BigInt.h"
-
+#include <openssl/sha.h>
 int main() {
 	// create default BigInt
 	BigInt biDefault;

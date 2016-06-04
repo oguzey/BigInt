@@ -8,12 +8,18 @@
 #include <cstdint>
 #include <climits>
 #include <random>
-#include "../logger/logger.h"
+#include "logger.h"
 
 static_assert(sizeof(unsigned int) == 4, "Support only 32-bit of integer");
 static_assert(sizeof(int64_t) == 8, "Need 64-bit integer for generator");
 
-class GeneratorMush
+class Generator {
+public:
+	virtual unsigned int next32bit() = 0;
+};
+
+
+class GeneratorMush : public Generator
 {
 public:
 	static GeneratorMush& getGeneratorMush()
