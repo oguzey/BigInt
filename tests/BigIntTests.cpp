@@ -1,12 +1,14 @@
+#define ALLOCATE_LOGGER
+#include "logger.h"
+#undef ALLOCATE_LOGGER
+
 #include <string>
 #include <string.h>
 #include <array>
 #include <assert.h>
 #include <ctime>
-#include "../include/BigInt.h"
+#include "BigInt.h"
 
-#define ALLOCATE_LOGGER
-#include "../logger/logger.h"
 
 #define GREEN	"\033[1;32m"
 #define YELLOW	"\033[1;33m"
@@ -529,26 +531,22 @@ void testGcd()
 	assertMsg(res.isEqual(check), "Test gcd failed (res = 1).");
 }
 
-void testExtGCD()
+void testPrimeBlumGenerator()
 {
-	BigInt x, y, check, a, b, gcd;
+	BigInt p;
+	for (int i = 0; i < 5; ++i) {
+		p.generateBlumPrime();
+		LOG("blum p = {}", p.toString());
+	}
+}
 
-	x.fromString("91983EE1A5CA112BE56574780");
-	y.fromString("190DFBA1C8DA7A68A");
-	x.extGCD(y, a, b, gcd);
-
-	check.fromString("25A");
-
-	assertMsg(gcd.isEqual(check), "Test extended gcd failed.");
-
-	LOG("a = {}", a.toString());
-	LOG("b = {}", b.toString());
-	LOG("(x) {} \n* (a) {} + (y) {} \n* (b) {} \n= (v) {}", x.toString(),
-	    a.toString(), y.toString(), b.toString(), gcd.toString());
-
-	BigInt t;
-	t.setMax();
-	LOG("t = {}", t.toString());
+void testPrimeGenerator()
+{
+	BigInt p;
+	for (int i = 0; i < 5; ++i) {
+		p.generatePrime();
+		LOG("p = {}", p.toString());
+	}
 }
 
 void mulBitByOne()
@@ -591,12 +589,15 @@ int main(int argc, char *argv[])
 	runTest(testDivision);
 	runTest(testGenerator);
 	runTest(testGcd);
-	runTest(testExtGCD);
+	//runTest(testPrimeGenerator);
 
+//	mesureTimeRunning(testPrimeGenerator);
+//	mesureTimeRunning(testPrimeBlumGenerator);
 
-	mesureTimeRunning(mulBitByOne);
-	mesureTimeRunning(mulBitByZero);
-	mesureTimeRunning(testExp);
+//	mesureTimeRunning(mulBitByOne);
+//	mesureTimeRunning(mulBitByZero);
+//	mesureTimeRunning(testExp);
+//	mesureTimeRunning(testPrimeGenerator);
 
 
 	LOG("End tests.");

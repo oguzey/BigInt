@@ -4,6 +4,7 @@
 #include <string.h>
 #include <array>
 #include <vector>
+#include "RandomGenerator.h"
 
 static_assert(sizeof(unsigned int) == 4, "Support only 32-bit of integer");
 
@@ -72,11 +73,10 @@ public:
 	/// multiplication `mulMont`.
 	///
 	void shutDownModularReduction();
-	void generateRand();
+	void generateRand(int size=1024);
 	void generatePrime();
 	void gcd(const BigInt &a, BigInt &res) const;
 	bool isEven() const;
-	void extGCD(const BigInt &y, BigInt &a, BigInt &b, BigInt &v) const;
 	void generateBlumPrime();
 
 private:
@@ -101,9 +101,11 @@ private:
 	static block fillBits(unsigned int amountBits);
 	bool testSimpleDivision();
 	bool isDivisor(BigInt &x);
-	bool testMillerRabin_real(int k);
-	bool testMillerRabin(int k);
-	void generatePartBlumPrime(const Generator &gen,
-				   std::vector<block> &randArray, int partSize);
+	bool testMillerRabin_real(int k, RandomGenerator &gen, std::vector<block> &randArray);
+	bool testMillerRabin(int k, RandomGenerator &gen, std::vector<block> &randArray);
+	void generatePartBlumPrime(RandomGenerator &gen, std::vector<block> &randArray,
+				   int partSize);
+	void mulHalfNumbers(const BigInt &y, BigInt &res) const;
+	void generateRand(RandomGenerator& gen, std::vector<block> &randArray, int size);
 };
 

@@ -3,7 +3,6 @@
 #include <math.h>
 #include "logger.h"
 #include "BigInt.h"
-#include "Generator.h"
 
 #define WORD_BITS			32
 #define BYTE_BITS			8
@@ -627,6 +626,37 @@ bool BigInt::div(const BigInt &y, BigInt &q, BigInt &r)
 	return true;
 }
 
+void BigInt::mulHalfNumbers(const BigInt &y, BigInt &res) const
+{
+	assert(getPosMostSignificatnBit() <= (int)length_ / 2);
+	assert(y.getPosMostSignificatnBit() <= (int)length_ / 2);
+
+	res.setZero();
+	// half number contains 17 full blocks and 1 block with 2 bits
+	int sizeHalf = size_ / 2;
+	assert(sizeHalf == 17);
+
+	block u = 0;
+	block v = 0;
+	block c = 0;
+	int64_t product = 0;
+
+	for (int i = 0; i <= sizeHalf; ++i) {
+		c = 0;
+		for (int j = 0; j <= sizeHalf; ++j) {
+			product = res.blocks_[i + j] + (int64_t)blocks_[i] * y.blocks_[j] + c;
+			v = product & BLOCK_MAX_NUMBER;
+			u = (product >> BLOCK_BITS) & BLOCK_MAX_NUMBER;
+			assert(u <= BLOCK_MAX_NUMBER);
+			res.blocks_[i + j] = v;
+			c = u;
+		}
+		if (i != sizeHalf) {
+			res.blocks_[i + sizeHalf + 1] = u;
+		}
+	}
+}
+
 void BigInt::mulMont(const BigInt &y, const BigInt &m, BigInt &ret) const
 {
 	assert(length_ == y.length_);
@@ -656,18 +686,13 @@ void BigInt::mulMont(const BigInt &y, const BigInt &m, BigInt &ret) const
 
 	for (i = 0; i <= len; ++i) {
 		xi = this->getBit(i);
-//		assert((xi & 1) == xi);
-//		assert((result.getBit(0) & 1) == result.getBit(0));
 		u = (resultSmall.getBit(0) + xi * y0) % 2;
-		//assert((u & 1) == u);
-
 		if (xi) {
 			hight += resultSmall.add(y);
 		}
 		if (u) {
 			hight += resultSmall.add(m);
 		}
-//		assert(result.getBit(0) == 0);
 		resultSmall.shiftRightBit();
 
 		if ((hight & 1)) {
@@ -691,8 +716,6 @@ void BigInt::mulMont(const BigInt &y, const BigInt &m, BigInt &ret) const
 	}
 	resultDouble.shiftLeft(len + 1);
 	resultDouble.mod(m);
-
-	//assert(result.getPosMostSignificatnBit() <= BIGINT_BITS);
 	ret.copyContent(resultDouble);
 }
 
@@ -705,16 +728,15 @@ void BigInt::initModularReduction()
 	const int len = posMostSignBit_ + 2;
 	preComputedTable_ = new BigInt*[len];
 	int i;
-	//DEBUG("length of table {}", len);
+
 	preComputedTable_[0] = new BigInt(BIGINT_DOUBLE_BITS);
 	preComputedTable_[0]->setNumber(1);
 	preComputedTable_[0]->shiftLeft(posMostSignBit_);
-	//DEBUG("most sign bit {}", mostSignBit);
-	//DEBUG("init shift table[{}] = {}", 0, preComputedTable[0]->toString());
+
 	while(preComputedTable_[0]->cmp(*this) == 1) {
 		preComputedTable_[0]->sub(*this);
 	}
-	//DEBUG("init table[{}] = {}", 0, table[0]->toString());
+
 
 	for (i = 1; i < len; ++i) {
 		preComputedTable_[i] = preComputedTable_[i - 1]->copy();
@@ -722,9 +744,9 @@ void BigInt::initModularReduction()
 		while(preComputedTable_[i]->cmp(*this) == 1) {
 			preComputedTable_[i]->sub(*this);
 		}
-		//DEBUG("init table[{}] = {}", i, table[i]->toString());
+
 	}
-	INFO("Init of montgomery multiplication done.");
+	DEBUG("Init of montgomery multiplication done.");
 }
 
 void BigInt::shutDownModularReduction()
@@ -733,13 +755,12 @@ void BigInt::shutDownModularReduction()
 	const int len = posMostSignBit_ + 2;
 	int i;
 	for (i = 0; i < len; ++i) {
-		//DEBUG("shutdown table[{}] = {}", i, table[i]->toString());
 		delete preComputedTable_[i];
 	}
 	delete[] preComputedTable_;
 	preComputedTable_ = NULL;
 	posMostSignBit_ = -1;
-	INFO("Shut down of montgomery multiplication done.");
+	DEBUG("Shut down of montgomery multiplication done.");
 }
 
 void BigInt::mod(const BigInt &m)
@@ -778,13 +799,12 @@ void BigInt::splitToRWords(std::vector<block> &rWords, int lenBits) const
 {
 	assert(lenBits > 0 && lenBits <= WORD_BITS);
 	int len = length_ / WORD_BITS;
-	int maxValue = fillBits(lenBits);
 	std::vector<block> rawArray(len);
 	blocksToRawArray(rawArray);
 
 	int bitValue;
 	int posBlock;
-	int rWord = 0;
+	block rWord = 0;
 	int rWordBitPos = (length_ % lenBits) - 1;
 	int leftBits;
 
@@ -799,7 +819,7 @@ void BigInt::splitToRWords(std::vector<block> &rWords, int lenBits) const
 			} else {
 				// push rWord to vector and clear data
 				rWordBitPos = lenBits - 1;
-				assert(rWord <= maxValue);
+				assert(rWord <= fillBits(lenBits));
 				rWords.push_back(rWord);
 				rWord = 0;
 			}
@@ -851,14 +871,35 @@ void BigInt::exp(const BigInt &e, const BigInt &m, BigInt &ret)
 	ret.copyContent(C);
 }
 
-void BigInt::generateRand()
+void BigInt::generateRand(int size)
 {
-	int size = length_ / WORD_BITS;
-	std::vector<block> randArray(size);
-	Generator& gen = GeneratorMush::getGeneratorMush();
+	assert(size <= BIGINT_BITS);
 
-	for (int i = 0; i < size; ++i) {
+	int fullBlocks = size / WORD_BITS;
+	int maxValueLastBlock = fillBits(size - fullBlocks * WORD_BIT);
+	std::vector<block> randArray(length_ / WORD_BITS);
+	RandomGenerator& gen = RandomGeneratorMush::getGeneratorMush();
+	for (int i = 0; i < fullBlocks; ++i) {
 		randArray[i] = gen.next32bit();
+	}
+	if (maxValueLastBlock) {
+		randArray[fullBlocks] = gen.next32bit() & maxValueLastBlock;
+	}
+	rawArrayToBlocks(randArray);
+}
+
+void BigInt::generateRand(RandomGenerator& gen, std::vector<block> &randArray, int size)
+{
+	assert(size <= BIGINT_BITS);
+
+	int fullBlocks = size / WORD_BITS;
+	int maxValueLastBlock = fillBits(size - fullBlocks * WORD_BIT);
+
+	for (int i = 0; i < fullBlocks; ++i) {
+		randArray[i] = gen.next32bit();
+	}
+	if (maxValueLastBlock) {
+		randArray[fullBlocks] = gen.next32bit() & maxValueLastBlock;
 	}
 	rawArrayToBlocks(randArray);
 }
@@ -911,71 +952,4 @@ void BigInt::gcd(const BigInt &a, BigInt &res) const
 bool BigInt::isEven() const
 {
 	return !(blocks_[0] & 1);
-}
-
-void BigInt::extGCD(const BigInt &y, BigInt &a, BigInt &b, BigInt &v) const
-{
-	int g = 0;
-	BigInt A, B, u, x, y2;
-	BigInt& C = a;
-	BigInt& D = b;
-
-	x.copyContent(*this);
-	y2.copyContent(y);
-
-	C.setZero();
-	D.setZero();
-
-	while (x.isEven() && y2.isEven()) {
-		x.shiftRightBit();
-		y2.shiftRightBit();
-		++g;
-	}
-
-	u.copyContent(x);
-	v.copyContent(y2);
-	A.setBit(0, 1); // set 1
-	D.setBit(0, 1); // set 1
-
-	while (u.isZero() == false) {
-		DEBUG("u = {}", u.toString());
-		while (u.isEven()) {
-			u.shiftRightBit();
-			if (A.isEven() && B.isEven()) {
-				A.shiftRightBit();
-				B.shiftRightBit();
-			} else {
-				A.add(y2);
-				A.shiftRightBit();
-				B.sub(x);
-				B.shiftRightBit();
-			}
-		}
-		while (v.isEven()) {
-			v.shiftRightBit();
-			if (C.isEven() && D.isEven()) {
-				C.shiftRightBit();
-				D.shiftRightBit();
-			} else {
-				C.add(y2);
-				C.shiftRightBit();
-				D.sub(x);
-				D.shiftRightBit();
-			}
-		}
-		if (u.cmp(v) != -1) {
-			DEBUG("u >= v");
-			u.sub(v);
-			A.sub(C);
-			B.sub(D);
-		} else {
-			DEBUG("u < v");
-			v.sub(u);
-			C.sub(A);
-			D.sub(B);
-		}
-	}
-
-	v.shiftLeft(g);
-	// return ( a, b, g * v)
 }

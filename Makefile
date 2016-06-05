@@ -12,19 +12,19 @@ TARGET = App
 SRCS =
 
 ifeq ($(MAKECMDGOALS),release)
-	CFLAGS := $(CFLAGS) -O3 $(CUSTOM_CFLAGS)
+	CFLAGS := $(CFLAGS) -O3 -DNDEBUG $(CUSTOM_CFLAGS)
 	TARGET := release$(TARGET)
 	SRCS := $(COMMON_SRCS) main.cpp
 endif
 
 ifeq ($(MAKECMDGOALS),debug)
-	CFLAGS := $(CFLAGS) -O0 -g3 -DDEBUG_ON $(CUSTOM_CFLAGS)
+	CFLAGS := $(CFLAGS) -O0 -g3 $(CUSTOM_CFLAGS)
 	TARGET := debug$(TARGET)
 	SRCS := $(COMMON_SRCS) main.cpp
 endif
 
 ifeq ($(MAKECMDGOALS),test)
-	CFLAGS := $(CFLAGS) -O0 -g3 -DDEBUG_ON $(CUSTOM_CFLAGS)
+	CFLAGS := $(CFLAGS) -O0 -g3 $(CUSTOM_CFLAGS)
 	TARGET := test$(TARGET)
 	SRCS := $(COMMON_SRCS) $(wildcard ./tests/*.cpp)
 endif

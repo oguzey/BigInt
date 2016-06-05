@@ -1,5 +1,5 @@
-#ifndef GENERATORMUSH_H
-#define GENERATORMUSH_H
+#ifndef RANDOMGENERATOR_H
+#define RANDOMGENERATOR_H
 
 #include <cstdlib>
 #include <ctime>
@@ -13,25 +13,25 @@
 static_assert(sizeof(unsigned int) == 4, "Support only 32-bit of integer");
 static_assert(sizeof(int64_t) == 8, "Need 64-bit integer for generator");
 
-class Generator {
+class RandomGenerator {
 public:
 	virtual unsigned int next32bit() = 0;
 };
 
 
-class GeneratorMush : public Generator
+class RandomGeneratorMush : public RandomGenerator
 {
 public:
-	static GeneratorMush& getGeneratorMush()
+	static RandomGeneratorMush& getGeneratorMush()
 	{
 		LOG("Get generator");
-		static GeneratorMush generator;
+		static RandomGeneratorMush generator;
 		return generator;
 	}
 
-	~GeneratorMush() {LOG("New generator was destroyed.");}
-	GeneratorMush(GeneratorMush const&) = delete;
-	void operator=(GeneratorMush const&) = delete;
+	~RandomGeneratorMush() {LOG("New generator was destroyed.");}
+	RandomGeneratorMush(RandomGeneratorMush const&) = delete;
+	void operator=(RandomGeneratorMush const&) = delete;
 
 	unsigned int next32bit()
 	{
@@ -58,7 +58,7 @@ private:
 	bool overflowA;
 	bool overflowB;
 
-	GeneratorMush()
+	RandomGeneratorMush()
 	{
 		std::mt19937 rng;
 		rng.seed(std::random_device()());
@@ -103,4 +103,4 @@ private:
 	}
 };
 
-#endif // GENERATORMUSH_H
+#endif // RANDOMGENERATOR_H
