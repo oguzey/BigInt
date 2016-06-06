@@ -78,6 +78,7 @@ public:
 	void gcd(const BigInt &a, BigInt &res) const;
 	bool isEven() const;
 	void generateBlumPrime();
+	void generateBlumPrime(BigInt &r, BigInt &s);
 
 private:
 	block *blocks_;

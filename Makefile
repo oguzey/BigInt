@@ -1,7 +1,7 @@
 CC = g++
 
-INCLUDES = -I./logger -I./logger/spdlog/include -I ./include
-LIBS = -pthread
+INCLUDES = -I./logger -I./logger/spdlog/include -I ./include -I /usr/include/openssl
+LIBS = -pthread -lcrypto
 
 CUSTOM_CFLAGS=
 CFLAGS = -std=c++11 -Wall -Wpedantic
