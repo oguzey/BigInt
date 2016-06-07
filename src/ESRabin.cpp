@@ -14,7 +14,11 @@ void ESRabinManager::signMessage(const std::string &message, ESRabinSignature &s
 		 const ESRabinPrivateKey &privKey)
 {
 	signature.message.assign(message);
-	signature.R.generateRand(768);
+	signature.R.generateRand();
+
+	std::vector<uint8_t> byteArray = signature.R.getByteArray();
+
+
 	signature.B.generateRand();
 }
 

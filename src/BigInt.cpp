@@ -138,17 +138,12 @@ std::string BigInt::toString() const
 	std::fill(rawArray.begin(), rawArray.end(), 0);
 
 	blocksToRawArray(rawArray);
-
-	//INFO("BigInt number (normal array): size is {}", rawArray.size());
 	for(i = 0; i < rawArray.size(); ++i) {
-		//INFO("{}\t{:X}", i, rawArray[i]);
 		for (int j = 0; j < 8; ++j) {
 			char ch = rawArray[i] >> (j * 4) & 0xF;
 			output.push_back(integerToHexChar(ch));
-			//DEBUG("parse {} as {}", (int)ch, integerToHexChar(ch));
 		}
 	}
-	//INFO("End of BigInt ( normal array)");
 	std::reverse(output.begin(), output.end());
 	return output;
 }
@@ -236,8 +231,6 @@ void BigInt::blocksToRawArray(std::vector<block> &rawArray) const
 		rawArray[indexRaw] = blocks_[indexBlocks] >> acquiredBits;
 		temp = blocks_[indexBlocks + 1] <<
 			(WORD_BITS - acquiredBits - BLOCK_CARRY_BITS);
-		//DEBUG("BtA: {:X} + \t {:X}   {}", rawArray[indexRaw], temp,
-		//		(WORD_BITS - acquiredBits));
 		rawArray[indexRaw] += temp;
 		acquiredBits += BLOCK_CARRY_BITS;
 	}
@@ -495,17 +488,6 @@ int BigInt::clearBit(unsigned int position)
 	blocks_[position / BLOCK_BITS] &= ~(1 << posInBlock);
 	return bit;
 }
-
-//BigInt &BigInt::copy() const
-//{
-//	BigInt number(length_);
-//	unsigned int i;
-
-//	for (i = 0; i < size_; ++i) {
-//		number.blocks_[i] = blocks_[i];
-//	}
-//	return number;
-//}
 
 BigInt* BigInt::copy() const
 {
@@ -952,4 +934,27 @@ void BigInt::gcd(const BigInt &a, BigInt &res) const
 bool BigInt::isEven() const
 {
 	return !(blocks_[0] & 1);
+}
+
+std::vector<uint8_t> BigInt::getByteArray() const
+{
+	std::vector<uint8_t> byteArray(length_ / BYTE_BITS);
+	getByteArray(byteArray);
+	return byteArray;
+}
+
+void BigInt::getByteArray(std::vector<uint8_t> &byteArray) const
+{
+	unsigned int i = 0;
+	std::vector<block> rawArray(length_ / WORD_BITS);
+
+	std::fill(byteArray.begin(), byteArray.end(), 0);
+
+	blocksToRawArray(rawArray);
+	for(i = 0; i < rawArray.size(); ++i) {
+		for (int j = 0; j < 8; ++j) {
+			uint8_t ch = rawArray[i] >> (j * 4) & 0xF;
+			byteArray.push_back(ch);
+		}
+	}
 }

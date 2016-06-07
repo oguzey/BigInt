@@ -79,6 +79,8 @@ public:
 	bool isEven() const;
 	void generateBlumPrime();
 	void generateBlumPrime(BigInt &r, BigInt &s);
+	std::vector<uint8_t> getByteArray() const;
+	void getByteArray(std::vector<uint8_t> &byteArray) const;
 
 private:
 	block *blocks_;
