@@ -11,7 +11,7 @@
 
 /* macros for whole BigInt */
 #define BIGINT_BITS			1024
-#define BIGINT_BYTES			128	/* 1024 / 4 */
+#define BIGINT_BYTES			128	/* 1024 / 8 */
 #define BIGINT_SIZE_IN_HEX		256
 
 #define BIGINT_DOUBLE_BITS		2048
@@ -146,6 +146,27 @@ std::string BigInt::toString() const
 	}
 	std::reverse(output.begin(), output.end());
 	return output;
+}
+
+void BigInt::fromByteArray(unsigned char *data, size_t size)
+{
+	if (size > BIGINT_BYTES) {
+		throw std::length_error("Byte array too long.");
+	}
+	std::vector<block> rawArray(length_ / WORD_BITS);
+	unsigned int indexArray = 0;
+	unsigned int shiftPos = 0;
+
+	for (int i = size - 1; i >= 0 && indexArray < rawArray.size(); --i) {
+		rawArray[indexArray] += data[i] << 8 * shiftPos;
+		++shiftPos;
+		if (shiftPos % 4 == 0) {
+			++indexArray;
+			shiftPos = 0;
+		}
+	}
+
+	rawArrayToBlocks(rawArray);
 }
 
 /**
@@ -948,12 +969,12 @@ void BigInt::getByteArray(std::vector<uint8_t> &byteArray) const
 	unsigned int i = 0;
 	std::vector<block> rawArray(length_ / WORD_BITS);
 
-	std::fill(byteArray.begin(), byteArray.end(), 0);
+	byteArray.clear();
 
 	blocksToRawArray(rawArray);
 	for(i = 0; i < rawArray.size(); ++i) {
-		for (int j = 0; j < 8; ++j) {
-			uint8_t ch = rawArray[i] >> (j * 4) & 0xF;
+		for (int j = 0; j < 4; ++j) {
+			uint8_t ch = rawArray[i] >> (j * 8) & 0xFF;
 			byteArray.push_back(ch);
 		}
 	}

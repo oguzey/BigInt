@@ -17,11 +17,12 @@ int main() {
 
 	manager.generateKeys(pubKey, privKey);
 	manager.signMessage(msg, sign, pubKey, privKey);
-	if (manager.checkSignature(sign)) {
+	if (manager.checkSignature(sign, pubKey)) {
 		INFO("Check function checked signature!");
 	} else {
 		INFO("Check function: signature wrong!");
 	}
+	manager.finalizeKeys(pubKey, privKey);
 
 	return 0;
 }
