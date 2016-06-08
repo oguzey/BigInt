@@ -1,4 +1,5 @@
 #include <openssl/sha.h>
+#include <assert.h>
 #include "ESRabin.h"
 #include "logger.h"
 
@@ -63,7 +64,6 @@ void ESRabinManager::signMessage(const std::string &message, ESRabinSignature &s
 	}
 	// calculate B
 	calculateBeta(signature, pubKey, privKey, H);
-	signature.B.generateRand(700);
 }
 
 void ESRabinManager::calculateBeta(ESRabinSignature &signature,
@@ -89,7 +89,36 @@ void ESRabinManager::calculateBeta(ESRabinSignature &signature,
 
 	DEBUG("root for P = {}", rootForP.toString());
 	DEBUG("root for Q = {}", rootForQ.toString());
+	if (rootForQ.cmp(rootForP) == 1) {
+		GarnerAlgorithmCRT(privKey.p, privKey.q, rootForP, rootForQ, signature.B);
+	} else {
+		GarnerAlgorithmCRT(privKey.q, privKey.p, rootForQ, rootForP, signature.B);
+	}
+}
 
+void ESRabinManager::GarnerAlgorithmCRT(const BigInt &p, const BigInt &q,
+					const BigInt &Vp, const BigInt &Vq,
+					BigInt &res)
+{
+	BigInt exponent, tmp, diff;
+
+	assert(Vq.cmp(Vp) != -1);
+
+	exponent.copyContent(q);
+	tmp.setNumber(2);
+	exponent.sub(tmp);
+
+	tmp.setZero();
+	p.exp(exponent, q, tmp);
+
+	diff.copyContent(Vq);
+	diff.sub(Vp);
+
+	diff.mulMont(tmp, q, tmp);
+
+	tmp.mulHalfNumbers(p, res);
+
+	res.add(Vp);
 }
 
 bool ESRabinManager::checkSignature(const ESRabinSignature &signature,

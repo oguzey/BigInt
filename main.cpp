@@ -18,7 +18,7 @@ int main() {
 	manager.generateKeys(pubKey, privKey);
 	manager.signMessage(msg, sign, pubKey, privKey);
 	if (manager.checkSignature(sign, pubKey)) {
-		INFO("Check function checked signature!");
+		INFO("Check function: signature correct!");
 	} else {
 		INFO("Check function: signature wrong!");
 	}

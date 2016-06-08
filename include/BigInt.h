@@ -82,6 +82,7 @@ public:
 	void generateBlumPrime(BigInt &r, BigInt &s);
 	std::vector<uint8_t> getByteArray() const;
 	void getByteArray(std::vector<uint8_t> &byteArray) const;
+	void mulHalfNumbers(const BigInt &y, BigInt &res) const;
 
 private:
 	block *blocks_;
@@ -109,7 +110,6 @@ private:
 	bool testMillerRabin(int k, RandomGenerator &gen, std::vector<block> &randArray);
 	void generatePartBlumPrime(RandomGenerator &gen, std::vector<block> &randArray,
 				   int partSize);
-	void mulHalfNumbers(const BigInt &y, BigInt &res) const;
 	void generateRand(RandomGenerator& gen, std::vector<block> &randArray, int size);
 };
 

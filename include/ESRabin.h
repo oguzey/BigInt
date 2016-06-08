@@ -53,6 +53,9 @@ private:
 			   const ESRabinPublicKey &pubKey,
 			   const ESRabinPrivateKey &privKey,
 			   const BigInt &H);
+
+	void GarnerAlgorithmCRT(const BigInt &p, const BigInt &q,
+				const BigInt &Vp, const BigInt &Vq, BigInt &res);
 };
 
 #endif // ESRABIN_H
