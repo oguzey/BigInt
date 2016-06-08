@@ -16,7 +16,7 @@ int main() {
 	std::string msg("Hello, World!");
 
 	manager.generateKeys(pubKey, privKey);
-	manager.signMessage(msg, sign, pubKey, privKey);
+	manager.signMessage(msg, signature, pubKey, privKey);
 
 	INFO("Public key data:");
 	INFO("\t N = {}", pubKey.getN().toString());
