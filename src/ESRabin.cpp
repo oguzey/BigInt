@@ -87,8 +87,6 @@ void ESRabinManager::calculateBeta(ESRabinSignature &signature,
 	H.exp(expP, privKey.p, rootForP);
 	H.exp(expQ, privKey.q, rootForQ);
 
-	DEBUG("root for P = {}", rootForP.toString());
-	DEBUG("root for Q = {}", rootForQ.toString());
 	if (rootForQ.cmp(rootForP) == 1) {
 		GarnerAlgorithmCRT(privKey.p, privKey.q, rootForP, rootForQ, signature.B);
 	} else {
@@ -100,9 +98,9 @@ void ESRabinManager::GarnerAlgorithmCRT(const BigInt &p, const BigInt &q,
 					const BigInt &Vp, const BigInt &Vq,
 					BigInt &res)
 {
-	BigInt exponent, tmp, diff;
-
 	assert(Vq.cmp(Vp) != -1);
+
+	BigInt exponent, tmp, diff;
 
 	exponent.copyContent(q);
 	tmp.setNumber(2);
@@ -134,12 +132,5 @@ bool ESRabinManager::checkSignature(const ESRabinSignature &signature,
 	H.fromByteArray(digest, SHA256_DIGEST_LENGTH);
 
 	signature.B.mulMont(signature.B, pubKey.n, res);
-
-	INFO("checkSignature: B = {}", signature.getB().toString());
-	INFO("checkSignature: R = {}", signature.getR().toString());
-	INFO("checkSignature: message = {}", signature.getMessage().c_str());
-	INFO("checkSignature: H = {}", H.toString());
-	INFO("checkSignature: res = {}", res.toString());
-
 	return H.isEqual(res);
 }

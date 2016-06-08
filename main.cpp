@@ -11,16 +11,31 @@ int main() {
 	ESRabinManager manager;
 	ESRabinPublicKey pubKey;
 	ESRabinPrivateKey privKey;
-	ESRabinSignature sign;
+	ESRabinSignature signature;
 
 	std::string msg("Hello, World!");
 
 	manager.generateKeys(pubKey, privKey);
 	manager.signMessage(msg, sign, pubKey, privKey);
-	if (manager.checkSignature(sign, pubKey)) {
-		INFO("Check function: signature correct!");
+
+	INFO("Public key data:");
+	INFO("\t N = {}", pubKey.getN().toString());
+	INFO("\t hash = {}", pubKey.getHash().c_str());
+
+	INFO("Private key data:");
+	INFO("\t P = {}", privKey.getP().toString());
+	INFO("\t Q = {}", privKey.getQ().toString());
+
+	INFO("Signature data:");
+	INFO("\t B = {}", signature.getB().toString());
+	INFO("\t R = {}", signature.getR().toString());
+	INFO("\t message = {}", signature.getMessage().c_str());
+
+	INFO("");
+	if (manager.checkSignature(signature, pubKey)) {
+		INFO("Signature is correct!");
 	} else {
-		INFO("Check function: signature wrong!");
+		INFO("Signature is wrong!");
 	}
 	manager.finalizeKeys(pubKey, privKey);
 
