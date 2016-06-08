@@ -100,7 +100,7 @@ bool BigInt::isDivisor(BigInt &x)
 
 bool BigInt::testMillerRabin_real(int k, RandomGenerator &gen, std::vector<block> &randArray)
 {
-	BigInt d, one, x, minusOne, res, copyX;
+	BigInt d, one, x, minusOne, res;//, copyX;
 
 	one.setNumber(1);
 	minusOne.copyContent(*this);
@@ -127,7 +127,7 @@ bool BigInt::testMillerRabin_real(int k, RandomGenerator &gen, std::vector<block
 //			LOG("P is NOT pseudosimple for base x. (1)");
 			return false;
 		}
-		copyX.copyContent(x);
+		//copyX.copyContent(x);
 		x.exp(d, *this, res);
 		if (res.isEqual(one) || res.isEqual(minusOne)) {
 			//LOG("P is pseudosimple for base x. (2))");

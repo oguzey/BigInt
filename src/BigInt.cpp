@@ -610,7 +610,7 @@ void BigInt::mulByBit(int bitValue)
 	}
 }
 
-bool BigInt::div(const BigInt &y, BigInt &q, BigInt &r)
+bool BigInt::div(const BigInt &y, BigInt &q, BigInt &r) const
 {
 	if (y.isZero()) {
 		CRITICAL("Could not divide by zero.");
@@ -835,7 +835,7 @@ void BigInt::splitToRWords(std::vector<block> &rWords, int lenBits) const
 	std::reverse(rWords.begin(), rWords.end());
 }
 
-void BigInt::exp(const BigInt &e, const BigInt &m, BigInt &ret)
+void BigInt::exp(const BigInt &e, const BigInt &m, BigInt &ret) const
 {
 	BigInt C;
 	std::vector<block> rWords;
@@ -849,13 +849,16 @@ void BigInt::exp(const BigInt &e, const BigInt &m, BigInt &ret)
 	BigInt precompValues[b];
 
 	/* check x less that mod */
-	this->mod(m);
+	//this->mod(m);
 
 	precompValues[0].setNumber(1);
 	precompValues[1].copyContent(*this);
 
+	// precompValues[1] is x
+	precompValues[1].mod(m);
+
 	for (i = 2; i < b; ++i) {
-		this->mulMont(precompValues[i - 1], m, precompValues[i]);
+		precompValues[1].mulMont(precompValues[i - 1], m, precompValues[i]);
 	}
 
 	e.splitToRWords(rWords, k);

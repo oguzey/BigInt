@@ -48,7 +48,11 @@ public:
 	bool checkSignature(const ESRabinSignature &signature,
 			    const ESRabinPublicKey &pubKey);
 private:
-	RandomGenerator& gen = RandomGeneratorMush::getGeneratorMush();
+	//RandomGenerator& gen = RandomGeneratorMush::getGeneratorMush();
+	void calculateBeta(ESRabinSignature &signature,
+			   const ESRabinPublicKey &pubKey,
+			   const ESRabinPrivateKey &privKey,
+			   const BigInt &H);
 };
 
 #endif // ESRABIN_H

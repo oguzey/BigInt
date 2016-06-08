@@ -55,20 +55,41 @@ void ESRabinManager::signMessage(const std::string &message, ESRabinSignature &s
 		if (res.isEqual(one)) {
 			H.exp(expQ, privKey.q, res);
 			if (res.isEqual(one)) {
+				INFO("Current H is qadratic residue. '{}'", H.toString());
 				break;
 			}
 		}
-		LOG("Number '{}' is not square lyshok", H.toString());
-		LOG("Size of bytes is {}", bytes.size());
-//		for (int i = 0; i < bytes.size(); ++i) {
-//			LOG("byte[{}] = {:X}", i, bytes[i]);
-//		}
-//		LOG("B = {}", signature.B.toString());
-
-		// signature.B
+		DEBUG("Number '{}' is not qadratic residue", H.toString());
 	}
 	// calculate B
-	signature.B.generateRand();
+	calculateBeta(signature, pubKey, privKey, H);
+	signature.B.generateRand(700);
+}
+
+void ESRabinManager::calculateBeta(ESRabinSignature &signature,
+				   const ESRabinPublicKey &pubKey,
+				   const ESRabinPrivateKey &privKey,
+				   const BigInt &H)
+{
+	BigInt expP, expQ, one, rootForQ, rootForP;
+
+	one.setNumber(1);
+
+	// calculate H^0.5
+	expP.copyContent(privKey.p);
+	expP.add(one);
+	expP.shiftRightBlock(2);
+
+	expQ.copyContent(privKey.q);
+	expQ.add(one);
+	expQ.shiftRightBlock(2);
+
+	H.exp(expP, privKey.p, rootForP);
+	H.exp(expQ, privKey.q, rootForQ);
+
+	DEBUG("root for P = {}", rootForP.toString());
+	DEBUG("root for Q = {}", rootForQ.toString());
+
 }
 
 bool ESRabinManager::checkSignature(const ESRabinSignature &signature,

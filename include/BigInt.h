@@ -28,10 +28,10 @@ public:
 	bool add(const BigInt &number);
 	void sub(const BigInt &number);
 	void mulByBit(int bitValue);
-	bool div(const BigInt &y, BigInt &q, BigInt &r);
+	bool div(const BigInt &y, BigInt &q, BigInt &r) const;
 	void mulMont(const BigInt &y, const BigInt &m, BigInt &ret) const;
 	void mod(const BigInt &m);
-	void exp(const BigInt &e, const BigInt &m, BigInt &ret);
+	void exp(const BigInt &e, const BigInt &m, BigInt &ret) const;
 
 	///
 	///  1 if this > number
