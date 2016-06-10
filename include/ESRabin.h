@@ -40,6 +40,7 @@ private:
 
 class ESRabinManager {
 public:
+	ESRabinManager(RandomGenerator &gen): generator(gen) {}
 	void generateKeys(ESRabinPublicKey &pubKey, ESRabinPrivateKey &privKey);
 	void finalizeKeys(ESRabinPublicKey &pubKey, ESRabinPrivateKey &privKey);
 	void signMessage(const std::string &message, ESRabinSignature &signature,
@@ -48,7 +49,7 @@ public:
 	bool checkSignature(const ESRabinSignature &signature,
 			    const ESRabinPublicKey &pubKey);
 private:
-	//RandomGenerator& gen = RandomGeneratorMush::getGeneratorMush();
+	RandomGenerator& generator;
 	void calculateBeta(ESRabinSignature &signature,
 			   const ESRabinPublicKey &pubKey,
 			   const ESRabinPrivateKey &privKey,

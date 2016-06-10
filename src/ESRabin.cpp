@@ -5,7 +5,7 @@
 
 void ESRabinManager::generateKeys(ESRabinPublicKey &pubKey, ESRabinPrivateKey &privKey)
 {
-	pubKey.n.generateBlumPrime(privKey.p, privKey.q);
+	pubKey.n.generateBlumPrime(generator, privKey.p, privKey.q);
 	pubKey.hash = SHA256;
 	pubKey.nameHashFunc.assign("SHA256");
 
@@ -42,7 +42,7 @@ void ESRabinManager::signMessage(const std::string &message, ESRabinSignature &s
 	signature.message.assign(message);
 
 	while (true) {
-		signature.R.generateRand();
+		signature.R.generateRand(generator);
 		signature.R.getByteArray(byteArray);
 
 		bytes.clear();

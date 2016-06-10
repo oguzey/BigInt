@@ -5,12 +5,11 @@
 #define WORD_BITS	32
 #define ROUNDS_MR_TEST 3
 
-void BigInt::generatePrime()
+void BigInt::generatePrime(RandomGenerator &gen)
 {
 
 	int size = length_ / WORD_BITS;
 	std::vector<block> randArray(size);
-	RandomGenerator& gen = RandomGeneratorMush::getGeneratorMush();
 	int i = 0;
 
 	do {
@@ -24,26 +23,23 @@ void BigInt::generatePrime()
 	} while (!testSimpleDivision() || !testMillerRabin(ROUNDS_MR_TEST, gen, randArray));
 }
 
-void BigInt::generateBlumPrime(BigInt &r, BigInt &s)
+void BigInt::generateBlumPrime(RandomGenerator &gen, BigInt &r, BigInt &s)
 {
 	int size = length_ / WORD_BITS;
 	int partSize = size / 2;
 	std::vector<block> randArray(size);
-	RandomGenerator& gen = RandomGeneratorMush::getGeneratorMush();
 
 	LOG("r part Blum number generating...");
 	r.generatePartBlumPrime(gen, randArray, partSize);
 	LOG("s part Blum number generating...");
 	s.generatePartBlumPrime(gen, randArray, partSize);
-//	LOG("r = {}", r.toString());
-//	LOG("s = {}", s.toString());
 	r.mulHalfNumbers(s, *this);
 }
 
-void BigInt::generateBlumPrime()
+void BigInt::generateBlumPrime(RandomGenerator &gen)
 {
 	BigInt r, s;
-	generateBlumPrime(r, s);
+	generateBlumPrime(gen, r, s);
 }
 
 void BigInt::generatePartBlumPrime(RandomGenerator &gen,

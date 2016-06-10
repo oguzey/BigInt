@@ -496,8 +496,9 @@ void testDivision()
 
 void testGenerator()
 {
+	RandomGenerator& gen = RandomGeneratorMush::getGeneratorMush();
 	BigInt a;
-	a.generateRand();
+	a.generateRand(gen);
 	assertMsg(a.isZero() == false, "Number is zero");
 }
 
@@ -533,18 +534,20 @@ void testGcd()
 
 void testPrimeBlumGenerator()
 {
+	RandomGenerator& gen = RandomGeneratorMush::getGeneratorMush();
 	BigInt p;
 	for (int i = 0; i < 5; ++i) {
-		p.generateBlumPrime();
+		p.generateBlumPrime(gen);
 		LOG("blum p = {}", p.toString());
 	}
 }
 
 void testPrimeGenerator()
 {
+	RandomGenerator& gen = RandomGeneratorMush::getGeneratorMush();
 	BigInt p;
 	for (int i = 0; i < 5; ++i) {
-		p.generatePrime();
+		p.generatePrime(gen);
 		LOG("p = {}", p.toString());
 	}
 }

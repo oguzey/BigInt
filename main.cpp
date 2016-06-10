@@ -6,9 +6,9 @@
 #include "include/BigInt.h"
 #include "ESRabin.h"
 
-int main() {
-
-	ESRabinManager manager;
+int main()
+{
+	ESRabinManager manager(RandomGeneratorMush::getGeneratorMush());
 	ESRabinPublicKey pubKey;
 	ESRabinPrivateKey privKey;
 	ESRabinSignature signature;

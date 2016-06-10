@@ -74,12 +74,12 @@ public:
 	/// multiplication `mulMont`.
 	///
 	void shutDownModularReduction();
-	void generateRand(int size=1024);
-	void generatePrime();
+	void generateRand(RandomGenerator &gen, int size=1024);
+	void generatePrime(RandomGenerator &gen);
 	void gcd(const BigInt &a, BigInt &res) const;
 	bool isEven() const;
-	void generateBlumPrime();
-	void generateBlumPrime(BigInt &r, BigInt &s);
+	void generateBlumPrime(RandomGenerator &gen);
+	void generateBlumPrime(RandomGenerator &gen, BigInt &r, BigInt &s);
 	std::vector<uint8_t> getByteArray() const;
 	void getByteArray(std::vector<uint8_t> &byteArray) const;
 	void mulHalfNumbers(const BigInt &y, BigInt &res) const;

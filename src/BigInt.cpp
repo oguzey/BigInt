@@ -877,14 +877,14 @@ void BigInt::exp(const BigInt &e, const BigInt &m, BigInt &ret) const
 	ret.copyContent(C);
 }
 
-void BigInt::generateRand(int size)
+void BigInt::generateRand(RandomGenerator &gen, int size)
 {
 	assert(size <= BIGINT_BITS);
 
 	int fullBlocks = size / WORD_BITS;
 	int maxValueLastBlock = fillBits(size - fullBlocks * WORD_BIT);
 	std::vector<block> randArray(length_ / WORD_BITS);
-	RandomGenerator& gen = RandomGeneratorMush::getGeneratorMush();
+
 	for (int i = 0; i < fullBlocks; ++i) {
 		randArray[i] = gen.next32bit();
 	}
